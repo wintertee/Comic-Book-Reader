@@ -5,6 +5,7 @@
 #include <QImage>
 #include <QMainWindow>
 
+#include "Magick++.h"
 #include "bitextractor.hpp"
 #include "comicbook.h"
 
@@ -31,6 +32,7 @@ private slots:
   void lastPage();
   void zoomOut();
   void normalSize();
+  void setFilter(Magick::FilterType newFilter);
   void fitToWindow();
   void about();
 
@@ -50,12 +52,18 @@ private:
   QScrollArea *scrollArea;
   double scaleFactor = 1;
   int size, current;
+  Magick::FilterType filter = Magick::LanczosFilter;
 
   QAction *nextPageAct;
   QAction *lastPageAct;
   QAction *zoomInAct;
   QAction *zoomOutAct;
   QAction *normalSizeAct;
+  QAction *pointFilterAct;
+  QAction *boxFilterAct;
+  QAction *triangleFilterAct;
+  QAction *sincFilterAct;
+  QAction *lanczosFilterAct;
   QAction *fitToWindowAct;
 };
 #endif // MAINWINDOW_H

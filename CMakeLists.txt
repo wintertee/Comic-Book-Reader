@@ -25,12 +25,6 @@ set(PROJECT_SOURCES
         src/comicbook.h
 )
 
-#file(GLOB PROJECT_SOURCES "src/*.cpp")
-#file(GLOB PROJECT_SOURCES "src/*.h")
-#file(GLOB PROJECT_SOURCES "src/*.ui")
-
-message(STATUS ${GLOB})
-
 set(PROJECT_HEAD)
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
@@ -57,12 +51,14 @@ else()
 endif()
 
 include_directories(external/bit7z/include)
+include_directories(external/ImageMagick/include)
 find_library(BIT7Z bit7z64.lib HINTS external/bit7z/lib)
 find_library(BIT7Z_D bit7z64_d.lib  HINTS external/bit7z/lib)
+find_library(Magick++ CORE_RL_Magick++_.lib HINTS external/ImageMagick/lib)
+find_library(MagickCore CORE_RL_MagickCore_.lib HINTS external/ImageMagick/lib)
+find_library(MagickWand CORE_RL_MagickWand_.lib HINTS external/ImageMagick/lib)
 
-# message(STATUS ${PROJECT_SOURCES})
-
-target_link_libraries(CBR PRIVATE debug ${BIT7Z_D})
+target_link_libraries(CBR PRIVATE debug ${BIT7Z_D} ${Magick++} ${MagickCore} ${MagickWand})
 # target_link_libraries(CBR PRIVATE optimized ${BIT7Z})
 target_link_libraries(CBR PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
 
