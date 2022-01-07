@@ -23,8 +23,7 @@
 #include "bitexception.hpp"
 #include "qlabel.h"
 
-MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
-{
+MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     bit7z::Bit7zLibrary lib(L"7z.dll");
     ComicBook comicbook;
     createActions();
@@ -46,8 +45,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
 MainWindow::~MainWindow() {}
 
-void MainWindow::createActions()
-{
+void MainWindow::createActions() {
     QMenu *fileMenu = menuBar()->addMenu(tr("&File"));
 
     QAction *openAct = fileMenu->addAction(tr("&Open..."), this, &MainWindow::open);
@@ -84,20 +82,15 @@ void MainWindow::createActions()
 
     QMenu *filterMenu = viewMenu->addMenu(tr("&Filter"));
 
-    pointFilterAct = filterMenu->addAction(tr("PointFilter"), this, [=]()
-                                           { MainWindow::setFilter(Magick::PointFilter); });
+    pointFilterAct = filterMenu->addAction(tr("PointFilter"), this, [=]() { MainWindow::setFilter(Magick::PointFilter); });
 
-    boxFilterAct = filterMenu->addAction(tr("BoxFilter"), this, [=]()
-                                         { MainWindow::setFilter(Magick::BoxFilter); });
+    boxFilterAct = filterMenu->addAction(tr("BoxFilter"), this, [=]() { MainWindow::setFilter(Magick::BoxFilter); });
 
-    triangleFilterAct = filterMenu->addAction(tr("TriangleFilter"), this, [=]()
-                                              { MainWindow::setFilter(Magick::TriangleFilter); });
+    triangleFilterAct = filterMenu->addAction(tr("TriangleFilter"), this, [=]() { MainWindow::setFilter(Magick::TriangleFilter); });
 
-    sincFilterAct = filterMenu->addAction(tr("SincFilter"), this, [=]()
-                                          { MainWindow::setFilter(Magick::SincFilter); });
+    sincFilterAct = filterMenu->addAction(tr("SincFilter"), this, [=]() { MainWindow::setFilter(Magick::SincFilter); });
 
-    lanczosFilterAct = filterMenu->addAction(tr("LanczosFilter"), this, [=]()
-                                             { MainWindow::setFilter(Magick::LanczosFilter); });
+    lanczosFilterAct = filterMenu->addAction(tr("LanczosFilter"), this, [=]() { MainWindow::setFilter(Magick::LanczosFilter); });
 
     viewMenu->addSeparator();
 
@@ -112,44 +105,32 @@ void MainWindow::createActions()
     helpMenu->addAction(tr("About &Qt"), this, &QApplication::aboutQt);
 }
 
-void MainWindow::open()
-{
+void MainWindow::open() {
     bit7z::BitExtractor *extractor = nullptr;
 
     QString fileName = QFileDialog::getOpenFileName(this, "Open File", "", "Comic files (*.cbz *.cbr)");
     fileInfo = QFileInfo(fileName);
     QString extention = fileInfo.suffix();
 
-    try
-    {
-        bit7z::Bit7zLibrary lib{L"7z.dll"};
-        if (!QString::compare(extention, "cbz", Qt::CaseInsensitive))
-            extractor = new bit7z::BitExtractor{lib, bit7z::BitFormat::Zip};
-        else if (!QString::compare(extention, "cbr", Qt::CaseInsensitive))
-            extractor = new bit7z::BitExtractor{lib, bit7z::BitFormat::Rar};
-        else
-            throw(bit7z::BitException::runtime_error("unknown file type " + extention.toStdString()));
+    bit7z::Bit7zLibrary lib{L"7z.dll"};
+    if (!QString::compare(extention, "cbz", Qt::CaseInsensitive))
+        extractor = new bit7z::BitExtractor{lib, bit7z::BitFormat::Zip};
+    else if (!QString::compare(extention, "cbr", Qt::CaseInsensitive))
+        extractor = new bit7z::BitExtractor{lib, bit7z::BitFormat::Rar};
+    else
+        throw(bit7z::BitException::runtime_error("unknown file type " + extention.toStdString()));
 
-        extractor->extract(fileName.toStdWString(), comicbook.map);
-        comicbook.it = comicbook.map.begin();
-        size = comicbook.map.size();
-        current = 1;
-        updateImage();
-    }
-    catch (const bit7z::BitException &ex)
-    {
-        QMessageBox msgBox;
-        msgBox.setText("An error occured.");
-        msgBox.setInformativeText(ex.what());
-        msgBox.setStandardButtons(QMessageBox::Cancel);
-        msgBox.exec();
-    }
+    extractor->extract(fileName.toStdWString(), comicbook.map);
+    comicbook.it = comicbook.map.begin();
+    size = comicbook.map.size();
+    current = 1;
+    updateImage();
+
     if (extractor != nullptr)
         delete extractor;
 }
 
-void MainWindow::updateImage()
-{
+void MainWindow::updateImage() {
     image.loadFromData(comicbook.it->second.data(), comicbook.it->second.size());
     if (image.colorSpace().isValid())
         image.convertToColorSpace(QColorSpace::SRgb);
@@ -166,14 +147,12 @@ void MainWindow::updateImage()
     setWindowTitle(QString("CBR - %1 (%2/%3)").arg(fileInfo.baseName(), QString::number(current), QString::number(size)));
 }
 
-void MainWindow::nextPage()
-{
+void MainWindow::nextPage() {
     comicbook.it++;
     current++;
     updateImage();
 }
-void MainWindow::lastPage()
-{
+void MainWindow::lastPage() {
     comicbook.it--;
     current--;
     updateImage();
@@ -183,16 +162,14 @@ void MainWindow::zoomIn() { scaleImage(1.25); }
 
 void MainWindow::zoomOut() { scaleImage(0.8); }
 
-void MainWindow::normalSize()
-{
+void MainWindow::normalSize() {
     imageLabel->adjustSize();
     scaleFactor = 1.0;
 }
 
 void MainWindow::setFilter(Magick::FilterType newFilter) { filter = newFilter; }
 
-void MainWindow::fitToWindow()
-{
+void MainWindow::fitToWindow() {
     bool fitToWindow = fitToWindowAct->isChecked();
     scrollArea->setWidgetResizable(fitToWindow);
     if (!fitToWindow)
@@ -202,8 +179,7 @@ void MainWindow::fitToWindow()
 
 void MainWindow::about() { QMessageBox::about(this, tr("About CBR"), tr("CBR is Comic Book Reader")); }
 
-void MainWindow::updateActions()
-{
+void MainWindow::updateActions() {
     zoomInAct->setEnabled(!fitToWindowAct->isChecked());
     zoomOutAct->setEnabled(!fitToWindowAct->isChecked());
     normalSizeAct->setEnabled(!fitToWindowAct->isChecked());
@@ -211,31 +187,19 @@ void MainWindow::updateActions()
     lastPageAct->setEnabled(current != 1);
 }
 
-void MainWindow::scaleImage(double factor)
-{
+void MainWindow::scaleImage(double factor) {
     scaleFactor *= factor;
-    try
-    {
-        Magick::Blob blob;
-        qDebug() << QString::number(image.sizeInBytes());
-        blob.update(comicbook.it->second.data(), comicbook.it->second.size());
-        Magick::Image im;
-        im.read(blob);
-        im.filterType(filter);
-        im.zoom(Magick::Geometry(im.columns() * scaleFactor, im.rows() * scaleFactor));
-        im.write(&blob);
-        image.loadFromData((const uchar *)blob.data(), blob.length());
-        imageLabel->setPixmap(QPixmap::fromImage(image));
-        imageLabel->adjustSize();
-    }
-    catch (const std::exception &e)
-    {
-        QMessageBox msgBox;
-        msgBox.setText("An error occured.");
-        msgBox.setInformativeText(e.what());
-        msgBox.setStandardButtons(QMessageBox::Cancel);
-        msgBox.exec();
-    }
+
+    Magick::Blob blob;
+    blob.update(comicbook.it->second.data(), comicbook.it->second.size());
+    Magick::Image im;
+    im.read(blob);
+    im.filterType(filter);
+    im.zoom(Magick::Geometry(im.columns() * scaleFactor, im.rows() * scaleFactor));
+    im.write(&blob);
+    image.loadFromData((const uchar *)blob.data(), blob.length());
+    imageLabel->setPixmap(QPixmap::fromImage(image));
+    imageLabel->adjustSize();
 
     // imageLabel->resize(scaleFactor * imageLabel->pixmap(Qt::ReturnByValue).size());
 
@@ -246,7 +210,6 @@ void MainWindow::scaleImage(double factor)
     zoomOutAct->setEnabled(scaleFactor > 0.333);
 }
 
-void MainWindow::adjustScrollBar(QScrollBar *scrollBar, double factor)
-{
+void MainWindow::adjustScrollBar(QScrollBar *scrollBar, double factor) {
     scrollBar->setValue(int(factor * scrollBar->value() + ((factor - 1) * scrollBar->pageStep() / 2)));
 }
