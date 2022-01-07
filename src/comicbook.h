@@ -8,12 +8,16 @@
 
 typedef unsigned char byte_t;
 
-class ComicBook
-{
-public:
-  ComicBook();
-  std::map<std::wstring, std::vector<byte_t>> map;
-  std::map<std::wstring, std::vector<byte_t>>::iterator it;
+class ComicBook {
+  public:
+    ComicBook();
+    void append_content(std::vector<byte_t> &data);
+    const std::vector<byte_t> *get_content(void) const;
+    size_t size() const;
+    bool empty() const;
+
+  private:
+    std::vector<std::vector<byte_t>> content;
 };
 
 #endif // COMICBOOK_H
