@@ -11,6 +11,7 @@
 #include <QMenuBar>
 #include <QMessageBox>
 #include <QMimeData>
+#include <QMouseEvent>
 #include <QPainter>
 #include <QScreen>
 #include <QScrollArea>
@@ -33,18 +34,16 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     updateActions();
 
     imageLabel = new QLabel(this);
-    imageLabel->setBackgroundRole(QPalette::Base);
-    imageLabel->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
-    imageLabel->setScaledContents(true);
 
     scrollArea = new QScrollArea(this);
-    scrollArea->setBackgroundRole(QPalette::Dark);
+    // scrollArea->setBackgroundRole(QPalette::Dark);
     scrollArea->setWidget(imageLabel);
-    scrollArea->setAlignment(Qt::AlignHCenter | Qt::AlignTop);
+    scrollArea->setFrameShape(QFrame::NoFrame);
+    scrollArea->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
     scrollArea->setVisible(false);
     setCentralWidget(scrollArea);
 
-    // resize(QGuiApplication::primaryScreen()->availableSize() * 3 / 5);
+    resize(QGuiApplication::primaryScreen()->availableSize() * 3 / 5);
     showMaximized();
 }
 
@@ -74,35 +73,35 @@ void MainWindow::open() {
     for (auto it = filename_filedata_map.begin(); it != filename_filedata_map.end(); ++it)
         comicbook.append_content(it->second);
 
+    // load first image
     current = 0;
     blobRead(current);
-    loadScaledImage(0);
+    scrollArea->setVisible(true);
     loadScaledImage(0);
 
     if (extractor != nullptr)
         delete extractor;
 }
 
+void MainWindow::blobRead(size_t idx) { blob.update(comicbook.get_content()[idx].data(), comicbook.get_content()[idx].size()); }
+
 void MainWindow::loadImageFromBlob(const Magick::Blob &blob) {
-    pixmap.loadFromData((const uchar *)blob.data(), blob.length());
+    pixmap.loadFromData((const uchar *)blob.data(), (unsigned int)blob.length());
     imageLabel->setPixmap(pixmap);
     imageLabel->adjustSize();
 
-    scrollArea->setVisible(true);
     updateActions();
-
-    setWindowTitle(QString("CBR - %1 (%2/%3) %4 \%")
-                       .arg(fileInfo.baseName(), QString::number(current + 1), QString::number(comicbook.size()), QString::number(scaleFactor * 100, 'f', 2)));
+    updateTitle();
 }
 
 void MainWindow::loadScaledImage(double factor) {
     image.read(blob);
-    if (factor == 0) {
+    if (factor == SCALE_TO_WINDOW) {
 
         int w = scrollArea->width();
         int h = scrollArea->height();
-        int image_w = image.columns();
-        int image_h = image.rows();
+        int image_w = (int)image.columns();
+        int image_h = (int)image.rows();
 
         double scaleFactor_w = (double)w / image_w * 0.99;
         double scaleFactor_h = (double)h / image_h * 0.99;
@@ -118,19 +117,33 @@ void MainWindow::loadScaledImage(double factor) {
     adjustScrollBar(scrollArea->horizontalScrollBar(), factor);
     adjustScrollBar(scrollArea->verticalScrollBar(), factor);
 
-    zoomInAct->setEnabled(scaleFactor < 3.0);
-    zoomOutAct->setEnabled(scaleFactor > 0.333);
+    zoomInAct->setEnabled(scaleFactor < 5.0);
+    zoomOutAct->setEnabled(scaleFactor > 0.2);
 }
-
-void MainWindow::blobRead(size_t idx) { blob.update(comicbook.get_content()[idx].data(), comicbook.get_content()[idx].size()); }
 
 void MainWindow::nextPage() { changePage(1); }
 void MainWindow::lastPage() { changePage(-1); }
 
+void MainWindow::mousePressEvent(QMouseEvent *event) {
+    auto x = event->position().x();
+    auto y = event->position().y();
+    if (scrollArea->geometry().contains(x, y)) {
+        if (x < scrollArea->width() / 3)
+            lastPage();
+        else if (x > scrollArea->width() / 3 * 2)
+            nextPage();
+    }
+}
+
 void MainWindow::changePage(int relative_to) {
-    current += relative_to;
+    int target_index = current + relative_to;
+    if (target_index < 0)
+        return;
+    if (target_index >= (int)comicbook.size())
+        return;
+    current = target_index;
     blobRead(current);
-    loadScaledImage(0);
+    loadScaledImage(SCALE_TO_WINDOW);
 }
 
 void MainWindow::zoomIn() { loadScaledImage(1.25); }
@@ -140,7 +153,6 @@ void MainWindow::zoomOut() { loadScaledImage(0.8); }
 void MainWindow::normalSize() {
     scaleFactor = 1.0;
     loadImageFromBlob(blob);
-    imageLabel->adjustSize();
 }
 
 void MainWindow::setFilter(Magick::FilterType newFilter) { filter = newFilter; }
@@ -199,11 +211,17 @@ void MainWindow::createActions() {
 }
 
 void MainWindow::updateActions() {
-    zoomInAct->setEnabled(!comicbook.empty());
-    zoomOutAct->setEnabled(!comicbook.empty());
-    normalSizeAct->setEnabled(!comicbook.empty());
-    nextPageAct->setEnabled(!comicbook.empty() && current != comicbook.size() - 1);
-    lastPageAct->setEnabled(!comicbook.empty() && current != 0);
+    bool empty = comicbook.empty();
+    zoomInAct->setEnabled(!empty);
+    zoomOutAct->setEnabled(!empty);
+    normalSizeAct->setEnabled(!empty);
+    nextPageAct->setEnabled(!empty && current != comicbook.size() - 1);
+    lastPageAct->setEnabled(!empty && current != 0);
+}
+
+void MainWindow::updateTitle() {
+    setWindowTitle(QString("CBR - %1 (%2/%3)    %4 %")
+                       .arg(fileInfo.baseName(), QString::number(current + 1), QString::number(comicbook.size()), QString::number(scaleFactor * 100, 'f', 2)));
 }
 
 void MainWindow::adjustScrollBar(QScrollBar *scrollBar, double factor) {
