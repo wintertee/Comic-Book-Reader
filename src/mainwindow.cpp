@@ -47,7 +47,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     showMaximized();
 }
 
-MainWindow::~MainWindow() {}
+MainWindow::~MainWindow() {
+    delete imageLabel;
+    delete scrollArea;
+}
 
 void MainWindow::open() {
     // open file dialog
