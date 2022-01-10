@@ -18,6 +18,7 @@
 #include <QScrollBar>
 #include <QStandardPaths>
 #include <QStatusBar>
+#include <QActionGroup>
 
 #include "Magick++.h"
 #include "bitarchiveinfo.hpp"
@@ -201,11 +202,21 @@ void MainWindow::createActions() {
 
     QMenu *filterMenu = viewMenu->addMenu(tr("&Filter"));
 
-    pointFilterAct = filterMenu->addAction(tr("PointFilter"), this, [=]() { MainWindow::setFilter(Magick::PointFilter); });
-    boxFilterAct = filterMenu->addAction(tr("BoxFilter"), this, [=]() { MainWindow::setFilter(Magick::BoxFilter); });
-    triangleFilterAct = filterMenu->addAction(tr("TriangleFilter"), this, [=]() { MainWindow::setFilter(Magick::TriangleFilter); });
-    sincFilterAct = filterMenu->addAction(tr("SincFilter"), this, [=]() { MainWindow::setFilter(Magick::SincFilter); });
-    lanczosFilterAct = filterMenu->addAction(tr("LanczosFilter"), this, [=]() { MainWindow::setFilter(Magick::LanczosFilter); });
+    gaussianFilterAct = filterMenu->addAction(tr("Zoom in for image(GaussianFilter)"), this, [=]() { MainWindow::setFilter(Magick::GaussianFilter); });
+    boxFilterAct = filterMenu->addAction(tr("Zoom in for text(BoxFilter)"), this, [=]() { MainWindow::setFilter(Magick::BoxFilter); });
+    sincFilterAct = filterMenu->addAction(tr("Zoom out for text(SincFilter)"), this, [=]() { MainWindow::setFilter(Magick::SincFilter); });
+    lanczosFilterAct = filterMenu->addAction(tr("Zoom out for image(LanczosFilter)"), this, [=]() { MainWindow::setFilter(Magick::LanczosFilter); });
+
+    filterGroup = new QActionGroup(this);
+    filterGroup->addAction(gaussianFilterAct);
+    filterGroup->addAction(boxFilterAct);
+    filterGroup->addAction(sincFilterAct);
+    filterGroup->addAction(lanczosFilterAct);
+    gaussianFilterAct->setCheckable(true);
+    boxFilterAct->setCheckable(true);
+    sincFilterAct->setCheckable(true);
+    lanczosFilterAct->setCheckable(true);
+    lanczosFilterAct->setChecked(true);
 
     QMenu *helpMenu = menuBar()->addMenu(tr("&Help"));
 

@@ -19,6 +19,7 @@ class QLabel;
 class QMenu;
 class QScrollArea;
 class QScrollBar;
+class QActionGroup;
 QT_END_NAMESPACE
 
 class MainWindow : public QMainWindow {
@@ -88,10 +89,10 @@ class MainWindow : public QMainWindow {
     QAction *normalSizeAct;
     QAction *fullScreenAct;
 
-    QAction *pointFilterAct;
-    QAction *boxFilterAct;
-    QAction *triangleFilterAct;
-    QAction *sincFilterAct;
-    QAction *lanczosFilterAct;
+    QAction *gaussianFilterAct; // Zoom in for image
+    QAction *boxFilterAct; // Zoom in for text
+    QAction *sincFilterAct; // Zoom out for text
+    QAction *lanczosFilterAct; // Zoom out for image
+    QActionGroup* filterGroup;
 };
 #endif // MAINWINDOW_H
