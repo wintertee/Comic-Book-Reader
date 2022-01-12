@@ -11,7 +11,9 @@
 
 #include "Magick++.h"
 #include "bitextractor.hpp"
+#include "cbfile.h"
 #include "comicbook.h"
+#include "smartimage.h"
 
 QT_BEGIN_NAMESPACE
 class QAction;
@@ -49,9 +51,9 @@ class MainWindow : public QMainWindow {
     void about();
 
   private:
-    void blobRead(size_t idx);
-    void loadImageFromBlob(const Magick::Blob &blob);
-    void loadScaledImage(double factor);
+    void loadImage();
+    void scaleImage(double factor);
+    void showImage();
 
     void changePage(int relative_to);
 
@@ -61,22 +63,19 @@ class MainWindow : public QMainWindow {
 
     void adjustScrollBar(QScrollBar *scrollBar, double factor);
 
+    CBFile cbfile;
+
     // widgets
     QLabel *imageLabel;
     QScrollArea *scrollArea;
-    QPixmap pixmap;
 
     // data
     ComicBook comicbook;
-    Magick::Blob blob, scaled_blob;
-    Magick::Image image;
-
-    // cbz file info
-    QFileInfo fileInfo;
+    SmartImage img;
 
     // parameters
     double scaleFactor = 1;
-    size_t current;
+    unsigned int currentPage;
     Magick::FilterType filter = Magick::LanczosFilter;
 
     // menubar
@@ -90,9 +89,9 @@ class MainWindow : public QMainWindow {
     QAction *fullScreenAct;
 
     QAction *gaussianFilterAct; // Zoom in for image
-    QAction *boxFilterAct; // Zoom in for text
-    QAction *sincFilterAct; // Zoom out for text
-    QAction *lanczosFilterAct; // Zoom out for image
-    QActionGroup* filterGroup;
+    QAction *boxFilterAct;      // Zoom in for text
+    QAction *sincFilterAct;     // Zoom out for text
+    QAction *lanczosFilterAct;  // Zoom out for image
+    QActionGroup *filterGroup;
 };
 #endif // MAINWINDOW_H

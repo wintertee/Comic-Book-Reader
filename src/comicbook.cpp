@@ -1,11 +1,19 @@
 #include "comicbook.h"
+#include <QDebug>
 
 ComicBook::ComicBook() {}
 
-void ComicBook::append_content(std::vector<byte_t> &data) { content.emplace_back(data); }
+void ComicBook::initPages() {
+    pages.clear();
+    pages.reserve(content.size());
+    for (auto it = content.begin(); it != content.end(); ++it)
+        pages.emplace_back(&it->second);
+}
 
-const std::vector<byte_t> *ComicBook::get_content() const { return content.data(); }
+const std::vector<unsigned char> *ComicBook::getPage(unsigned int index) const { return pages[index]; }
 
-size_t ComicBook::size() const { return content.size(); }
+size_t ComicBook::size() const { return pages.size(); }
 
-bool ComicBook::empty() const { return content.empty(); }
+bool ComicBook::empty() const { return pages.empty(); }
+
+const QString &ComicBook::getName() const { return name; };

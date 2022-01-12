@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 
+#include <QActionGroup>
 #include <QApplication>
 #include <QClipboard>
 #include <QColorSpace>
@@ -18,7 +19,6 @@
 #include <QScrollBar>
 #include <QStandardPaths>
 #include <QStatusBar>
-#include <QActionGroup>
 
 #include "Magick++.h"
 #include "bitarchiveinfo.hpp"
@@ -28,7 +28,7 @@
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 
     bit7z::Bit7zLibrary lib(L"7z.dll");
-    image.filterType(filter); // default imagisk filter
+    img.setFilter(filter);
 
     // menu bar
     createActions();
@@ -55,68 +55,31 @@ MainWindow::~MainWindow() {
 
 void MainWindow::open() {
     // open file dialog
-    QString fileName = QFileDialog::getOpenFileName(this, "Open File", "", "Comic files (*.cbz *.cbr)");
+    QString fileName = QFileDialog::getOpenFileName(this, "Open File", "", "Comic book files (*.cbz *.cbr)");
     if (fileName.isEmpty() || fileName.isNull())
         return;
-    fileInfo = QFileInfo(fileName);
-    QString extention = fileInfo.suffix();
 
-    // load extractor
-    bit7z::BitExtractor *extractor = nullptr;
-    bit7z::Bit7zLibrary lib{L"7z.dll"};
-    if (!QString::compare(extention, "cbz", Qt::CaseInsensitive))
-        extractor = new bit7z::BitExtractor{lib, bit7z::BitFormat::Zip};
-    else if (!QString::compare(extention, "cbr", Qt::CaseInsensitive))
-        extractor = new bit7z::BitExtractor{lib, bit7z::BitFormat::Rar};
-    else
-        throw(bit7z::BitException::runtime_error("unknown file type " + extention.toStdString()));
-
-    // decompression
-    std::map<std::wstring, std::vector<byte_t>> filename_filedata_map;
-    extractor->extract(fileName.toStdWString(), filename_filedata_map);
-    for (auto it = filename_filedata_map.begin(); it != filename_filedata_map.end(); ++it)
-        comicbook.append_content(it->second);
+    // extract file to comicbook
+    cbfile.extract(fileName, comicbook);
 
     // load first image
-    current = 0;
-    blobRead(current);
     scrollArea->setVisible(true);
-    loadScaledImage(0);
-
-    if (extractor != nullptr)
-        delete extractor;
+    currentPage = 0;
+    loadImage();
+    scaleImage(SCALE_TO_WINDOW);
+    showImage();
 }
 
-void MainWindow::blobRead(size_t idx) { blob.update(comicbook.get_content()[idx].data(), comicbook.get_content()[idx].size()); }
+void MainWindow::loadImage() { img.loadpage(comicbook.getPage(currentPage)); }
 
-void MainWindow::loadImageFromBlob(const Magick::Blob &blob) {
-    pixmap.loadFromData((const uchar *)blob.data(), (unsigned int)blob.length());
-    imageLabel->setPixmap(pixmap);
-    imageLabel->adjustSize();
+void MainWindow::scaleImage(double factor) {
 
-    updateActions();
-    updateTitle();
-}
-
-void MainWindow::loadScaledImage(double factor) {
-    image.read(blob);
     if (factor == SCALE_TO_WINDOW) {
-
-        int w = scrollArea->width();
-        int h = scrollArea->height();
-        int image_w = (int)image.columns();
-        int image_h = (int)image.rows();
-
-        double scaleFactor_w = (double)w / image_w * 0.99;
-        double scaleFactor_h = (double)h / image_h * 0.99;
-        scaleFactor = std::min(scaleFactor_w, scaleFactor_h);
+        scaleFactor = img.fitToWindow(scrollArea->width(), scrollArea->height());
     } else {
         scaleFactor *= factor;
+        img.setScaleFactor(scaleFactor);
     }
-
-    image.zoom(Magick::Geometry(image.columns() * scaleFactor, image.rows() * scaleFactor));
-    image.write(&scaled_blob);
-    loadImageFromBlob(scaled_blob);
 
     adjustScrollBar(scrollArea->horizontalScrollBar(), factor);
     adjustScrollBar(scrollArea->verticalScrollBar(), factor);
@@ -125,8 +88,16 @@ void MainWindow::loadScaledImage(double factor) {
     zoomOutAct->setEnabled(scaleFactor > 0.2);
 }
 
-void MainWindow::nextPage() { changePage(1); }
-void MainWindow::lastPage() { changePage(-1); }
+void MainWindow::showImage() {
+    imageLabel->setPixmap(img.getPixmap());
+    imageLabel->adjustSize();
+
+    updateActions();
+    updateTitle();
+}
+
+void MainWindow::nextPage() { changePage(currentPage + 1); }
+void MainWindow::lastPage() { changePage(currentPage - 1); }
 
 void MainWindow::mousePressEvent(QMouseEvent *event) {
     auto x = event->position().x();
@@ -139,24 +110,31 @@ void MainWindow::mousePressEvent(QMouseEvent *event) {
     }
 }
 
-void MainWindow::changePage(int relative_to) {
-    int target_index = current + relative_to;
-    if (target_index < 0)
+void MainWindow::changePage(int toPage) {
+    if (toPage < 0)
         return;
-    if (target_index >= (int)comicbook.size())
+    if (toPage >= (int)comicbook.size())
         return;
-    current = target_index;
-    blobRead(current);
-    loadScaledImage(SCALE_TO_WINDOW);
+    currentPage = toPage;
+    loadImage();
+    scaleImage(SCALE_TO_WINDOW);
+    showImage();
 }
 
-void MainWindow::zoomIn() { loadScaledImage(1.25); }
+void MainWindow::zoomIn() {
+    scaleImage(1.25);
+    showImage();
+}
 
-void MainWindow::zoomOut() { loadScaledImage(0.8); }
+void MainWindow::zoomOut() {
+    scaleImage(0.8);
+    showImage();
+}
 
 void MainWindow::normalSize() {
     scaleFactor = 1.0;
-    loadImageFromBlob(blob);
+    img.setScaleFactor(scaleFactor);
+    showImage();
 }
 
 void MainWindow::setFilter(Magick::FilterType newFilter) { filter = newFilter; }
@@ -229,13 +207,14 @@ void MainWindow::updateActions() {
     zoomInAct->setEnabled(!empty);
     zoomOutAct->setEnabled(!empty);
     normalSizeAct->setEnabled(!empty);
-    nextPageAct->setEnabled(!empty && current != comicbook.size() - 1);
-    lastPageAct->setEnabled(!empty && current != 0);
+    nextPageAct->setEnabled(!empty && currentPage != comicbook.size() - 1);
+    lastPageAct->setEnabled(!empty && currentPage != 0);
 }
 
 void MainWindow::updateTitle() {
-    setWindowTitle(QString("CBR - %1 (%2/%3)    %4 %")
-                       .arg(fileInfo.baseName(), QString::number(current + 1), QString::number(comicbook.size()), QString::number(scaleFactor * 100, 'f', 2)));
+    setWindowTitle(
+        QString("CBR - %1 (%2/%3)    %4 %")
+            .arg(comicbook.getName(), QString::number(currentPage + 1), QString::number(comicbook.size()), QString::number(scaleFactor * 100, 'f', 2)));
 }
 
 void MainWindow::adjustScrollBar(QScrollBar *scrollBar, double factor) {

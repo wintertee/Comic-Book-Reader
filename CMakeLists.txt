@@ -8,7 +8,7 @@ set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(QT NAMES Qt6 Qt5 COMPONENTS Gui Widgets REQUIRED)
@@ -16,13 +16,10 @@ find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets REQUIRED)
 
 set(PROJECT_SOURCES
         src/main.cpp
-
-        src/mainwindow.cpp
-        src/mainwindow.h
-        #src/mainwindow.ui
-
-        src/comicbook.cpp
-        src/comicbook.h
+        src/mainwindow.h src/mainwindow.cpp
+        src/comicbook.h src/comicbook.cpp
+        src/cbfile.h src/cbfile.cpp
+        src/smartimage.h src/smartimage.cpp
 )
 
 set(PROJECT_HEAD)

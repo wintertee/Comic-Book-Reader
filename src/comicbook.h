@@ -1,19 +1,20 @@
 #ifndef COMICBOOK_H
 #define COMICBOOK_H
 
+#include <QString>
+#include <map>
+#include <string>
 #include <vector>
-
-typedef unsigned char byte_t;
 
 class ComicBook {
   public:
     ComicBook();
 
-    /// append data to content
-    void append_content(std::vector<byte_t> &data);
+    /// init pages
+    void initPages();
 
     /// return content.data()
-    const std::vector<byte_t> *get_content(void) const;
+    const std::vector<unsigned char> *getPage(unsigned int) const;
 
     /// return content.size()
     size_t size() const;
@@ -21,9 +22,19 @@ class ComicBook {
     /// return content.empty()
     bool empty() const;
 
+    const QString &getName() const;
+
+    friend class CBFile;
+
   private:
-    /// elements are images
-    std::vector<std::vector<byte_t>> content;
+    /// (filename, data) pair
+    std::map<std::wstring, std::vector<unsigned char>> content;
+
+    /// pointers to each page
+    std::vector<std::vector<unsigned char> *> pages;
+
+    /// book name
+    QString name;
 };
 
 #endif // COMICBOOK_H
