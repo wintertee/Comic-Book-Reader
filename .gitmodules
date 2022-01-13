@@ -1,3 +1,3 @@
 [submodule "external/bit7z"]
 	path = external/bit7z
-	url = git@github.com:wintertee/bit7z.git
+	url = https://github.com/wintertee/bit7z.git
