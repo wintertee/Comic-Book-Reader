@@ -7,6 +7,7 @@ void SmartImage::loadpage(const std::vector<unsigned char> *page) {
     blob.update(const_cast<void *>(reinterpret_cast<const void *>(page->data())), page->size());
     dirtyPixmap = true;
     dirtyImW = true;
+    emptyIm = false;
 }
 
 void SmartImage::setScaleFactor(double scaleFactor) {

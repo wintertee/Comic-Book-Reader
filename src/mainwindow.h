@@ -47,6 +47,7 @@ class MainWindow : public QMainWindow {
     void normalSize();
 
     void fullScreen();
+    void doublePage();
     void setFilter(Magick::FilterType newFilter);
     void about();
 
@@ -67,16 +68,21 @@ class MainWindow : public QMainWindow {
 
     // widgets
     QLabel *imageLabel;
+    QLabel *imageLabel1;
+    QLabel *imageLabel2;
     QScrollArea *scrollArea;
 
     // data
     ComicBook comicbook;
     SmartImage img;
+    SmartImage img2;
 
     // parameters
     double scaleFactor = 1;
+    double scaleFactor2 = 1;
     unsigned int currentPage;
     Magick::FilterType filter = Magick::LanczosFilter;
+    bool doublePageFlag = false;
 
     // menubar
     QMenu *fileMenu;
@@ -87,6 +93,7 @@ class MainWindow : public QMainWindow {
     QAction *zoomOutAct;
     QAction *normalSizeAct;
     QAction *fullScreenAct;
+    QAction *doublePageAct;
 
     QAction *gaussianFilterAct; // Zoom in for image
     QAction *boxFilterAct;      // Zoom in for text

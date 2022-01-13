@@ -15,6 +15,7 @@ class SmartImage {
     double fitToWindow(int win_w, int win_h);
     void setFilter(Magick::FilterType filter);
     const QPixmap &getPixmap();
+    bool empty(){return emptyIm;}
 
   private:
     /// load pixmap from blob
@@ -36,6 +37,8 @@ class SmartImage {
     int im_w = 0, im_h = 0;
     /// image geometry is dirty
     bool dirtyImW = false;
+    /// image is empty
+    bool emptyIm = true;
 };
 
 #endif // SMARTIMAGE_H
