@@ -27,7 +27,6 @@
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 
-    bit7z::Bit7zLibrary lib(L"7z.dll");
     img.setFilter(filter);
     img2.setFilter(filter);
 
@@ -77,26 +76,25 @@ void MainWindow::open() {
 
 void MainWindow::loadImage() {
     img.loadpage(comicbook.getPage(currentPage));
-    if(doublePageFlag && (currentPage<(unsigned int)comicbook.size()-1)){
-        img2.loadpage(comicbook.getPage(currentPage+1));
+    if (doublePageFlag && (currentPage < (unsigned int)comicbook.size() - 1)) {
+        img2.loadpage(comicbook.getPage(currentPage + 1));
     }
 }
 
 void MainWindow::scaleImage(double factor) {
 
     if (factor == SCALE_TO_WINDOW) {
-        if(doublePageFlag && !img2.empty()){
-            scaleFactor = img.fitToWindow(scrollArea->width()/2, scrollArea->height());
-            scaleFactor2 = img2.fitToWindow(scrollArea->width()/2, scrollArea->height());
-        }
-        else{
+        if (doublePageFlag && !img2.empty()) {
+            scaleFactor = img.fitToWindow(scrollArea->width() / 2, scrollArea->height());
+            scaleFactor2 = img2.fitToWindow(scrollArea->width() / 2, scrollArea->height());
+        } else {
             scaleFactor = img.fitToWindow(scrollArea->width(), scrollArea->height());
         }
 
     } else {
         scaleFactor *= factor;
         img.setScaleFactor(scaleFactor);
-        if(doublePageFlag && !img2.empty()){
+        if (doublePageFlag && !img2.empty()) {
             scaleFactor2 *= factor;
             img2.setScaleFactor(scaleFactor2);
         }
@@ -112,27 +110,23 @@ void MainWindow::scaleImage(double factor) {
 void MainWindow::showImage() {
     imageLabel1->setPixmap(img.getPixmap());
     imageLabel1->adjustSize();
-    if(doublePageFlag && (currentPage<(unsigned int)comicbook.size()-1)){ // normal case for double page
+    if (doublePageFlag && (currentPage < (unsigned int)comicbook.size() - 1)) { // normal case for double page
         imageLabel2->setPixmap(img2.getPixmap());
         imageLabel2->adjustSize();
-        imageLabel->resize(imageLabel1->width()+imageLabel2->width()+6, imageLabel1->height());
+        imageLabel->resize(imageLabel1->width() + imageLabel2->width() + 6, imageLabel1->height());
         imageLabel1->setGeometry(0, 0, imageLabel1->width(), imageLabel1->height());
-        imageLabel2->setGeometry(imageLabel1->width()+6, 0,
-                                  imageLabel2->width(), imageLabel2->height());
-    }
-    else if (doublePageFlag && !img2.empty()){ // show the last page with odd number
+        imageLabel2->setGeometry(imageLabel1->width() + 6, 0, imageLabel2->width(), imageLabel2->height());
+    } else if (doublePageFlag && !img2.empty()) { // show the last page with odd number
         imageLabel2->setPixmap(img2.getPixmap());
         imageLabel2->adjustSize();
-        imageLabel->resize(imageLabel1->width()+imageLabel2->width()+6, imageLabel1->height());
+        imageLabel->resize(imageLabel1->width() + imageLabel2->width() + 6, imageLabel1->height());
         imageLabel1->setGeometry(0, 0, imageLabel1->width(), imageLabel1->height());
-        imageLabel2->setGeometry(imageLabel1->width()+6, 0, 0, 0);
-    }
-    else if (doublePageFlag){ // the file has only one page
-        imageLabel->resize(imageLabel1->width()+imageLabel1->width()+6, imageLabel1->height());
+        imageLabel2->setGeometry(imageLabel1->width() + 6, 0, 0, 0);
+    } else if (doublePageFlag) { // the file has only one page
+        imageLabel->resize(imageLabel1->width() + imageLabel1->width() + 6, imageLabel1->height());
         imageLabel1->setGeometry(0, 0, imageLabel1->width(), imageLabel1->height());
-        imageLabel2->setGeometry(imageLabel1->width()+6, 0, 0, 0);
-    }
-    else{
+        imageLabel2->setGeometry(imageLabel1->width() + 6, 0, 0, 0);
+    } else {
         imageLabel->resize(imageLabel1->width(), imageLabel1->height());
     }
 
@@ -188,7 +182,7 @@ void MainWindow::zoomOut() {
 void MainWindow::normalSize() {
     scaleFactor = 1.0;
     img.setScaleFactor(scaleFactor);
-    if (doublePageFlag){
+    if (doublePageFlag) {
         img2.setScaleFactor(scaleFactor2);
     }
     showImage();
@@ -295,14 +289,13 @@ void MainWindow::fullScreen() {
         showMaximized();
 }
 
-void MainWindow::doublePage(){
+void MainWindow::doublePage() {
     doublePageFlag = !doublePageFlag;
-    if(!comicbook.empty()){
-        if (doublePageFlag){
-            currentPage = (int)(currentPage/2)*2;
-        }
-        else{
-            imageLabel2->setGeometry(imageLabel1->width()+6, 0, 0, 0);
+    if (!comicbook.empty()) {
+        if (doublePageFlag) {
+            currentPage = (int)(currentPage / 2) * 2;
+        } else {
+            imageLabel2->setGeometry(imageLabel1->width() + 6, 0, 0, 0);
         }
         loadImage();
         scaleImage(SCALE_TO_WINDOW);
