@@ -8,12 +8,15 @@
 
 #include <QFileInfo>
 #include <QMainWindow>
+#include <QLayout>
+#include <vector>
 
 #include "Magick++.h"
 #include "bitextractor.hpp"
 #include "cbfile.h"
 #include "comicbook.h"
 #include "smartimage.h"
+#include "smartlabel.h"
 
 QT_BEGIN_NAMESPACE
 class QAction;
@@ -37,6 +40,9 @@ class MainWindow : public QMainWindow {
   private slots:
     /// open a cbr or cbz file and extract to comicbook
     void open();
+    void organize();
+    void selectAll();
+    void extract();
 
     void nextPage();
     void lastPage();
@@ -70,12 +76,17 @@ class MainWindow : public QMainWindow {
     QLabel *imageLabel;
     QLabel *imageLabel1;
     QLabel *imageLabel2;
+    QLabel *extractLabel;
     QScrollArea *scrollArea;
 
     // data
     ComicBook comicbook;
     SmartImage img;
     SmartImage img2;
+    std::vector<QHBoxLayout *> qhLayoutVtr;
+    QVBoxLayout* qvLayout;
+    QGridLayout* qLayout;
+    std::vector<SmartLabel *> qLabelVtr;
 
     // parameters
     double scaleFactor = 1;
@@ -86,7 +97,11 @@ class MainWindow : public QMainWindow {
 
     // menubar
     QMenu *fileMenu;
+    QMenu *extractMenu;
 
+    QAction *organizeAct;
+    QAction *selectAllAct;
+    QAction *extractAct;
     QAction *nextPageAct;
     QAction *lastPageAct;
     QAction *zoomInAct;

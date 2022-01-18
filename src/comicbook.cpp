@@ -1,6 +1,8 @@
 #include "comicbook.h"
 #include <QDebug>
 
+std::vector<bool> subComicBook;
+
 ComicBook::ComicBook() {}
 
 void ComicBook::initPages() {

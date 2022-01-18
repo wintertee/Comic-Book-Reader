@@ -6,6 +6,8 @@
 #include <string>
 #include <vector>
 
+extern std::vector<bool> subComicBook;
+
 class ComicBook {
   public:
     ComicBook();
