@@ -7,8 +7,8 @@
 #define SCALE_TO_WINDOW 0
 
 #include <QFileInfo>
-#include <QMainWindow>
 #include <QLayout>
+#include <QMainWindow>
 #include <vector>
 
 #include "Magick++.h"
@@ -70,6 +70,8 @@ class MainWindow : public QMainWindow {
 
     void adjustScrollBar(QScrollBar *scrollBar, double factor);
 
+    void clearLayout();
+
     CBFile cbfile;
 
     // widgets
@@ -80,12 +82,12 @@ class MainWindow : public QMainWindow {
     QScrollArea *scrollArea;
 
     // data
-    ComicBook comicbook;
+    ComicBook *comicBook = nullptr;
+    std::vector<int> subComicBook;
     SmartImage img;
     SmartImage img2;
     std::vector<QHBoxLayout *> qhLayoutVtr;
-    QVBoxLayout* qvLayout;
-    QGridLayout* qLayout;
+    QVBoxLayout *qvLayout;
     std::vector<SmartLabel *> qLabelVtr;
 
     // parameters
@@ -94,6 +96,7 @@ class MainWindow : public QMainWindow {
     unsigned int currentPage;
     Magick::FilterType filter = Magick::LanczosFilter;
     bool doublePageFlag = false;
+    bool organizeFlag = false;
 
     // menubar
     QMenu *fileMenu;

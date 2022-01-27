@@ -12,7 +12,7 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(QT NAMES Qt6 Qt5 COMPONENTS Gui Widgets REQUIRED)
-find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets REQUIRED)
+find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets Concurrent REQUIRED)
 
 set(PROJECT_SOURCES
         src/main.cpp
@@ -20,6 +20,7 @@ set(PROJECT_SOURCES
         src/comicbook.h src/comicbook.cpp
         src/cbfile.h src/cbfile.cpp
         src/smartimage.h src/smartimage.cpp
+        src/smartlabel.h src/smartlabel.cpp
 )
 
 set(PROJECT_HEAD)
@@ -59,7 +60,7 @@ find_library(MagickWand CORE_RL_MagickWand_.lib HINTS external/ImageMagick/lib)
 
 target_link_libraries(CBR PRIVATE debug ${BIT7Z_DLIB} ${Magick++} ${MagickCore} ${MagickWand})
 # target_link_libraries(CBR PRIVATE optimized ${BIT7Z})
-target_link_libraries(CBR PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+target_link_libraries(CBR PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt6::Concurrent)
 
 
 if(QT_VERSION_MAJOR EQUAL 6)

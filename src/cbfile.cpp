@@ -1,33 +1,36 @@
 #include "cbfile.h"
+#include <QDebug>
 #include <QFileInfo>
 #include <QMessageBox>
+#include <vector>
 
 CBFile::CBFile() {}
 
-CBFile::~CBFile() {
-    if (zipExtractor != nullptr)
-        delete zipExtractor;
-    if (rarExtractor != nullptr)
-        delete rarExtractor;
-}
+CBFile::~CBFile() {}
 
-void CBFile::extract(const QString &fileName, ComicBook &comicBook) {
-    bit7z::BitExtractor *extractor;
-    QFileInfo fileInfo(fileName);
-    QString extention = fileInfo.suffix();
+void CBFile::extract(const QString &fileName, const QString &extention) {
+    std::wstring wFileName = fileName.toStdWString();
+    bit7z::BitExtractor const *extractor;
+    bit7z::BitArchiveInfo *archiveInfo;
 
     if (!QString::compare(extention, "cbz", Qt::CaseInsensitive)) {
-        if (zipExtractor == nullptr)
-            zipExtractor = new bit7z::BitExtractor{lib, bit7z::BitFormat::Zip};
-        extractor = zipExtractor;
+        extractor = &zipExtractor;
+        archiveInfo = new bit7z::BitArchiveInfo{lib, wFileName, bit7z::BitFormat::Zip};
     } else if (!QString::compare(extention, "cbr", Qt::CaseInsensitive)) {
-        if (rarExtractor == nullptr)
-            rarExtractor = new bit7z::BitExtractor{lib, bit7z::BitFormat::Rar};
-        extractor = rarExtractor;
+        extractor = &rarExtractor;
+        archiveInfo = new bit7z::BitArchiveInfo{lib, wFileName, bit7z::BitFormat::Rar};
     } else
         throw(std::runtime_error("unknown file type " + extention.toStdString()));
 
-    extractor->extract(fileName.toStdWString(), comicBook.content);
-    comicBook.initPages();
-    comicBook.name = fileInfo.baseName();
+    emit totalPages(archiveInfo->filesCount());
+    qDebug() << "emit total pages" << archiveInfo->filesCount();
+
+    for (auto &item : archiveInfo->items()) {
+        if (!item.isDir()) {
+            auto *out_buffer = new std::vector<unsigned char>;
+            extractor->extract(wFileName, *out_buffer, item.index());
+            emit extractPage(out_buffer);
+            qDebug() << "emit extractPage" << out_buffer;
+        }
+    }
 }

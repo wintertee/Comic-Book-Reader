@@ -1,20 +1,35 @@
 #include "comicbook.h"
+#include <QCoreApplication>
 #include <QDebug>
+#include <QThread>
+#include <QTime>
 
-std::vector<bool> subComicBook;
+ComicBook::ComicBook(QString name) : name(name), size(0) {}
 
-ComicBook::ComicBook() {}
-
-void ComicBook::initPages() {
-    pages.clear();
-    pages.reserve(content.size());
-    for (auto it = content.begin(); it != content.end(); ++it)
-        pages.emplace_back(&it->second);
+void ComicBook::appendPage(std::vector<unsigned char> *page) {
+    pages.push_back(page);
+    qDebug() << "append page" << pages.size();
 }
 
-const std::vector<unsigned char> *ComicBook::getPage(unsigned int index) const { return pages[index]; }
+void ComicBook::setSize(unsigned int size) {
+    qDebug() << "recive total pages" << size;
+    this->size = size;
+    pages.clear();
+    pages.reserve(size);
+    qDebug() << "setSize" << size;
+}
 
-size_t ComicBook::size() const { return pages.size(); }
+const std::vector<unsigned char> *ComicBook::getPage(unsigned int index) const {
+    while (index >= pages.size() || size == 0) {
+        QTime dieTime = QTime::currentTime().addSecs(1);
+        while (QTime::currentTime() < dieTime)
+            QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+        qDebug() << "waiting for 1000ms";
+    }
+    return pages[index];
+}
+
+unsigned int ComicBook::getSize() const { return size; }
 
 bool ComicBook::empty() const { return pages.empty(); }
 

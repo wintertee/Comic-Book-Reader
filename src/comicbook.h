@@ -1,42 +1,41 @@
 #ifndef COMICBOOK_H
 #define COMICBOOK_H
 
+#include <QObject>
 #include <QString>
 #include <map>
 #include <string>
 #include <vector>
 
-extern std::vector<bool> subComicBook;
+class ComicBook : public QObject {
 
-class ComicBook {
+    Q_OBJECT
+
   public:
-    ComicBook();
-
-    /// init pages
-    void initPages();
+    ComicBook(QString name);
 
     /// return content.data()
     const std::vector<unsigned char> *getPage(unsigned int) const;
 
     /// return content.size()
-    size_t size() const;
+    unsigned int getSize() const;
 
     /// return content.empty()
     bool empty() const;
 
     const QString &getName() const;
 
-    friend class CBFile;
+  public slots:
+    void setSize(unsigned int size);
+    void appendPage(std::vector<unsigned char> *page);
 
   private:
-    /// (filename, data) pair
-    std::map<std::wstring, std::vector<unsigned char>> content;
-
     /// pointers to each page
     std::vector<std::vector<unsigned char> *> pages;
 
     /// book name
     QString name;
+    unsigned int size;
 };
 
 #endif // COMICBOOK_H

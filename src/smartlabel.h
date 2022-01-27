@@ -3,33 +3,29 @@
 
 #include <QLabel>
 #include <QMouseEvent>
-#include <QString>
 #include <QPixmap>
+#include <QString>
 
-#define SMARTLABEL_PROP 5.0/6.0 // the proportion of image part
+#define SMARTLABEL_PROP 5.0 / 6.0 // the proportion of image part
 
-class SmartLabel : public QLabel{
+class SmartLabel : public QLabel {
     Q_OBJECT
-public:
-
+  public:
     SmartLabel(QWidget *parent);
-    SmartLabel(QWidget *parent, QPixmap image, int num);
+    SmartLabel(QWidget *parent, QPixmap image, int num, int *chosenFlag);
     ~SmartLabel();
 
-    bool hasChosen();
     void setChosen(bool flag);
     void resize(int w, int h);
 
-protected:
-
+  protected:
     void mousePressEvent(QMouseEvent *event);
 
-private:
-
+  private:
     QLabel *imageLabel;
     QLabel *textLabel;
 
-    bool chosenFlag = false;
+    int *chosenFlag;
     int num = -1;
     bool empty = true;
 };
