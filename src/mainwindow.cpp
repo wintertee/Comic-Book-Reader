@@ -101,65 +101,64 @@ void MainWindow::open() {
 }
 
 void MainWindow::organize() {
-    //    if (organizeAct->isChecked()) {
-    //        scrollArea->takeWidget();
-    //        scrollArea->setWidget(extractLabel);
-    //        extractLabel->setVisible(true);
-    //        setWindowTitle(QString("CBR - %1 Extracting...").arg(comicBook.getName()));
-    //        subComicBook.clear();
-    //        subComicBook.resize(comicBook.getSize(), false);
+    if (organizeAct->isChecked()) {
+        scrollArea->takeWidget();
+        scrollArea->setWidget(extractLabel);
+        extractLabel->setVisible(true);
+        setWindowTitle(QString("CBR - %1 Extracting...").arg(comicBook.getName()));
+        subComicBook.clear();
+        subComicBook.resize(comicBook.getSize(), false);
 
-    //        if (!organizeFlag) {
-    //            constexpr int labelWidth = 150;
-    //            constexpr int labelHeight = 200;
-    //            constexpr int spacing = 18;
-    //            int colNum = (scrollArea->width()) / (labelWidth + spacing);
-    //            colNum = colNum > 0 ? colNum : 1;
-    //            int lineNum = (int)comicBook.getSize() / colNum;
-    //            SmartImage im;
-    //            im.setFilter(filter);
-    //            int page = 0;
-    //            for (int i = 0; i < lineNum; ++i) {
-    //                qhLayoutVtr.push_back(new QHBoxLayout);
-    //                for (int j = 0; j < colNum; ++j, ++page) {
-    //                    im.loadpage(comicBook.getPage(page));
-    //                    im.fitToWindow(labelWidth, labelHeight * SMARTLABEL_PROP);
-    //                    qLabelVtr.push_back(new SmartLabel(extractLabel, im.getPixmap(), page, &subComicBook[page]));
-    //                    qLabelVtr[page]->resize(labelWidth, labelHeight);
-    //                    qhLayoutVtr[i]->addWidget(qLabelVtr[page]);
-    //                }
-    //                qhLayoutVtr[i]->setSpacing(spacing);
-    //                qvLayout->addLayout(qhLayoutVtr[i]);
-    //            }
-    //            if (comicBook.getSize() % colNum != 0) {
-    //                qhLayoutVtr.push_back(new QHBoxLayout);
-    //                for (int j = 0; j < colNum; ++j, ++page) {
-    //                    if (page < comicBook.getSize()) {
-    //                        im.loadpage(comicBook.getPage(page));
-    //                        im.fitToWindow(labelWidth, labelHeight * SMARTLABEL_PROP);
-    //                        qLabelVtr.push_back(new SmartLabel(extractLabel, im.getPixmap(), page, &subComicBook[page]));
-    //                        qLabelVtr[page]->resize(labelWidth, labelHeight);
-    //                        qhLayoutVtr[qhLayoutVtr.size() - 1]->addWidget(qLabelVtr[page]);
-    //                    } else {
-    //                        qLabelVtr.push_back(new SmartLabel(extractLabel));
-    //                        qLabelVtr[page]->resize(labelWidth, labelHeight);
-    //                        qhLayoutVtr[qhLayoutVtr.size() - 1]->addWidget(qLabelVtr[page]);
-    //                    }
-    //                }
-    //                qhLayoutVtr[qhLayoutVtr.size() - 1]->setSpacing(spacing);
-    //                qvLayout->addLayout(qhLayoutVtr[qhLayoutVtr.size() - 1]);
-    //            }
-    //            extractLabel->resize((labelWidth + spacing) * colNum, (lineNum + (comicBook.getSize() % colNum != 0)) * (labelHeight + 12));
-    //            extractLabel->setLayout(qvLayout);
-    //            organizeFlag = true;
-    //        }
-    //    } else {
-    //        scrollArea->takeWidget();
-    //        scrollArea->setWidget(imageLabel);
+        if (!organizeFlag) {
+            constexpr int labelWidth = 150;
+            constexpr int labelHeight = 200;
+            constexpr int spacing = 18;
+            int colNum = (scrollArea->width()) / (labelWidth + spacing);
+            colNum = colNum > 0 ? colNum : 1;
+            int lineNum = (int)comicBook.getSize() / colNum;
+            SmartImage im;
+            int page = 0;
+            for (int i = 0; i < lineNum; ++i) {
+                qhLayoutVtr.push_back(new QHBoxLayout);
+                for (int j = 0; j < colNum; ++j, ++page) {
+                    im = *comicBook.getPage(page);
+                    im.fitToWindow(labelWidth, labelHeight * SMARTLABEL_PROP);
+                    qLabelVtr.push_back(new SmartLabel(extractLabel, im.getPixmap(), page, &subComicBook[page]));
+                    qLabelVtr[page]->resize(labelWidth, labelHeight);
+                    qhLayoutVtr[i]->addWidget(qLabelVtr[page]);
+                }
+                qhLayoutVtr[i]->setSpacing(spacing);
+                qvLayout->addLayout(qhLayoutVtr[i]);
+            }
+            if (comicBook.getSize() % colNum != 0) {
+                qhLayoutVtr.push_back(new QHBoxLayout);
+                for (int j = 0; j < colNum; ++j, ++page) {
+                    if (page < comicBook.getSize()) {
+                        im = *comicBook.getPage(page);
+                        im.fitToWindow(labelWidth, labelHeight * SMARTLABEL_PROP);
+                        qLabelVtr.push_back(new SmartLabel(extractLabel, im.getPixmap(), page, &subComicBook[page]));
+                        qLabelVtr[page]->resize(labelWidth, labelHeight);
+                        qhLayoutVtr[qhLayoutVtr.size() - 1]->addWidget(qLabelVtr[page]);
+                    } else {
+                        qLabelVtr.push_back(new SmartLabel(extractLabel));
+                        qLabelVtr[page]->resize(labelWidth, labelHeight);
+                        qhLayoutVtr[qhLayoutVtr.size() - 1]->addWidget(qLabelVtr[page]);
+                    }
+                }
+                qhLayoutVtr[qhLayoutVtr.size() - 1]->setSpacing(spacing);
+                qvLayout->addLayout(qhLayoutVtr[qhLayoutVtr.size() - 1]);
+            }
+            extractLabel->resize((labelWidth + spacing) * colNum, (lineNum + (comicBook.getSize() % colNum != 0)) * (labelHeight + 12));
+            extractLabel->setLayout(qvLayout);
+            organizeFlag = true;
+        }
+    } else {
+        scrollArea->takeWidget();
+        scrollArea->setWidget(imageLabel);
 
-    //        updateTitle();
-    //    }
-    //    updateActions();
+        updateTitle();
+    }
+    updateActions();
 }
 
 void MainWindow::clearLayout() {
