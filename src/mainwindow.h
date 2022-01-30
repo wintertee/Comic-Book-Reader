@@ -4,8 +4,6 @@
 // disable minwindef.h
 #define NOMINMAX
 
-#define SCALE_TO_WINDOW 0
-
 #include <QFileInfo>
 #include <QLayout>
 #include <QMainWindow>
@@ -26,6 +24,9 @@ class QScrollArea;
 class QScrollBar;
 class QActionGroup;
 QT_END_NAMESPACE
+
+// windows_width, windows_height
+#define MAINWINDOW_GET_SCROLLAREA_GEO scrollArea->width() / (doublePageFlag ? 2 : 1), scrollArea->height()
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -58,8 +59,7 @@ class MainWindow : public QMainWindow {
     void about();
 
   private:
-    void loadImage();
-    void scaleImage(double factor);
+    void scalePageAround(unsigned int pageIdx, double factor);
     void showImage();
 
     void changePage(int relative_to);
@@ -82,17 +82,17 @@ class MainWindow : public QMainWindow {
     QScrollArea *scrollArea;
 
     // data
-    ComicBook *comicBook = nullptr;
+    ComicBook comicBook;
     std::vector<int> subComicBook;
-    SmartImage img;
-    SmartImage img2;
+
     std::vector<QHBoxLayout *> qhLayoutVtr;
     QVBoxLayout *qvLayout;
     std::vector<SmartLabel *> qLabelVtr;
 
     // parameters
-    double scaleFactor = 1;
-    double scaleFactor2 = 1;
+
+    constexpr const static double SCALE_TO_WINDOW = 0.0;
+    double scaleFactor = 1.0;
     unsigned int currentPage;
     Magick::FilterType filter = Magick::LanczosFilter;
     bool doublePageFlag = false;

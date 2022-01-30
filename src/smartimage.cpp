@@ -1,16 +1,19 @@
 #include "smartimage.h"
 #include <QDebug>
 
-SmartImage::SmartImage() {}
+SmartImage::SmartImage() { setFilter(Magick::LanczosFilter); }
 
 void SmartImage::loadpage(const std::vector<unsigned char> *page) {
     blob.update(const_cast<void *>(reinterpret_cast<const void *>(page->data())), page->size());
+    image.read(blob);
+    im_w = static_cast<int>(image.columns());
+    im_h = static_cast<int>(image.rows());
+    dirtyImage = false;
     dirtyPixmap = true;
-    dirtyImW = true;
-    emptyIm = false;
 }
 
 void SmartImage::setScaleFactor(double scaleFactor) {
+    isNowFittedToWindow = false;
     if (!dirtyPixmap && this->scaleFactor == scaleFactor)
         return;
     this->scaleFactor = scaleFactor;
@@ -19,41 +22,48 @@ void SmartImage::setScaleFactor(double scaleFactor) {
     } else {
         scaleImage();
     }
-    loadPixmap(scaled_blob);
+    genPixmap(scaled_blob);
     dirtyPixmap = false;
 }
 
-double SmartImage::fitToWindow(int win_w, int win_h) {
-    if (dirtyImW) {
-        readGeo();
+void SmartImage::fitToWindow(int win_w, int win_h) {
+    if (isNowFittedToWindow && win_w == this->win_w && win_h == this->win_h) {
+        return;
     }
+    this->win_w = win_w;
+    this->win_h = win_h;
+
     double scaleFactor_w = (double)win_w / im_w;
     double scaleFactor_h = (double)win_h / im_h;
-    double scaleFactor = std::min(scaleFactor_w, scaleFactor_h) * 0.99;
-    setScaleFactor(scaleFactor);
-    return scaleFactor;
+    double minScaleFactor = std::min(scaleFactor_w, scaleFactor_h) * 0.99;
+    setScaleFactor(minScaleFactor);
+    isNowFittedToWindow = true;
 }
 
-void SmartImage::setFilter(Magick::FilterType filter) { this->filter = filter; }
+double SmartImage::getScaleFactor() const { return scaleFactor; }
 
-const QPixmap &SmartImage::getPixmap() { return pixmap; }
+void SmartImage::setFilter(Magick::FilterType filter) { image.filterType(filter); }
 
-void SmartImage::loadPixmap(Magick::Blob &blob) {
+const QPixmap &SmartImage::getPixmap() const { return pixmap; }
+
+void SmartImage::genPixmap(Magick::Blob &blob) {
     pixmap.loadFromData(reinterpret_cast<const unsigned char *>(blob.data()), static_cast<unsigned int>(blob.length()));
 }
 
 void SmartImage::scaleImage() {
-    Magick::Image image;
-    image.read(blob);
-    image.filterType(filter);
+    if (dirtyImage) {
+        image.read(blob);
+    }
     image.zoom(Magick::Geometry(image.columns() * scaleFactor, image.rows() * scaleFactor));
+    dirtyImage = true;
     image.write(&scaled_blob);
 }
 
-void SmartImage::readGeo() {
-    Magick::Image image;
-    image.read(blob);
-    im_w = static_cast<int>(image.columns());
-    im_h = static_cast<int>(image.rows());
-    dirtyImW = false;
-}
+// void SmartImage::readGeo() {
+//    Magick::Image image;
+//    image.read(blob);
+//    im_w = static_cast<int>(image.columns());
+//    im_h = static_cast<int>(image.rows());
+//}
+
+// bool SmartImage::empty() const { return emptyIm; }

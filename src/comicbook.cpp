@@ -1,32 +1,90 @@
 #include "comicbook.h"
 #include <QCoreApplication>
 #include <QDebug>
-#include <QThread>
-#include <QTime>
+#include <QtConcurrent>
 
-ComicBook::ComicBook(QString name) : name(name), size(0) {}
+ComicBook::ComicBook() { reset(); }
+ComicBook::~ComicBook() { reset(); }
 
-void ComicBook::appendPage(std::vector<unsigned char> *page) {
-    pages.push_back(page);
-    qDebug() << "append page" << pages.size();
+void ComicBook::waitUntilPageAvailable(unsigned int pageIdx) const {
+    while (pageIdx >= size || qFutures[pageIdx].isCanceled() || !qFutures[pageIdx].isFinished()) {
+        QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+    }
+}
+
+void ComicBook::setPage(std::vector<unsigned char> *page, int pageIdx) {
+    qFutures[pageIdx] = QtConcurrent::run([this, page, pageIdx] {
+        if (pages[pageIdx] != nullptr) {
+            delete pages[pageIdx];
+        }
+        pages[pageIdx] = new SmartImage();
+        pages[pageIdx]->setFilter(filter);
+        pages[pageIdx]->loadpage(page);
+        pages[pageIdx]->setScaleFactor(0.5);
+        delete page;
+    });
 }
 
 void ComicBook::setSize(unsigned int size) {
-    qDebug() << "recive total pages" << size;
+    pages.assign(size, nullptr);
+    QFuture<void> qFuture;
+    qFutures.assign(size, qFuture);
     this->size = size;
-    pages.clear();
-    pages.reserve(size);
-    qDebug() << "setSize" << size;
 }
 
-const std::vector<unsigned char> *ComicBook::getPage(unsigned int index) const {
-    while (index >= pages.size() || size == 0) {
-        QTime dieTime = QTime::currentTime().addSecs(1);
-        while (QTime::currentTime() < dieTime)
-            QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
-        qDebug() << "waiting for 1000ms";
+void ComicBook::setName(const QString &name) { this->name = name; }
+
+void ComicBook::reset() {
+    setName("");
+    for (auto &page : pages) {
+        if (page != nullptr) {
+            delete page;
+        }
     }
+    setSize(0);
+}
+
+const SmartImage *ComicBook::getPage(unsigned int index) const {
+    waitUntilPageAvailable(index);
     return pages[index];
+}
+
+void ComicBook::scalePageAround(unsigned int pageIdx, double scaleFactor) {
+    waitUntilPageAvailable(pageIdx);
+    qFutures[pageIdx].then([&] { scalePage(pageIdx, scaleFactor); });
+    for (unsigned int i = std::max(pageIdx, cacheScaleRange) - cacheScaleRange; i < pageIdx; ++i) {
+        waitUntilPageAvailable(i);
+        qFutures[pageIdx].then([&] { scalePage(i, scaleFactor); });
+    }
+    for (unsigned int i = pageIdx + 1; i < std::min(pageIdx + cacheScaleRange, getSize()); ++i) {
+        waitUntilPageAvailable(i);
+        qFutures[pageIdx].then([&] { scalePage(i, scaleFactor); });
+    }
+}
+
+void ComicBook::scalePageAround(unsigned int pageIdx, int win_w, int win_h) {
+    waitUntilPageAvailable(pageIdx);
+    qFutures[pageIdx].then([&] { scalePage(pageIdx, win_w, win_h); });
+    for (unsigned int i = std::max(pageIdx, cacheScaleRange) - cacheScaleRange; i < pageIdx; ++i) {
+        waitUntilPageAvailable(i);
+        qFutures[pageIdx].then([&] { scalePage(i, win_w, win_h); });
+    }
+    for (unsigned int i = pageIdx + 1; i < std::min(pageIdx + cacheScaleRange, getSize()); ++i) {
+        waitUntilPageAvailable(i);
+        qFutures[pageIdx].then([&] { scalePage(i, win_w, win_h); });
+    }
+}
+
+void ComicBook::scalePage(unsigned int pageIdx, double scaleFactor) { pages[pageIdx]->setScaleFactor(scaleFactor); }
+
+void ComicBook::scalePage(unsigned int pageIdx, int win_w, int win_h) { pages[pageIdx]->fitToWindow(win_w, win_h); }
+
+void ComicBook::setFilter(const Magick::FilterType &filter) {
+    this->filter = filter;
+    for (unsigned int pageIdx = 0; pageIdx < getSize(); ++pageIdx) {
+        waitUntilPageAvailable(pageIdx);
+        qFutures[pageIdx].then([&] { pages[pageIdx]->setFilter(filter); });
+    }
 }
 
 unsigned int ComicBook::getSize() const { return size; }

@@ -20,7 +20,8 @@ class CBFile : public QObject {
     void extract(const QString &fileName, const QString &extention);
 
   signals:
-    void extractPage(std::vector<unsigned char> *page);
+    // need slot free page pointer
+    void extractPage(std::vector<unsigned char> *page, int pageIdx);
     void totalPages(unsigned int);
 
   private:

@@ -1,7 +1,4 @@
 #include "cbfile.h"
-#include <QDebug>
-#include <QFileInfo>
-#include <QMessageBox>
 #include <vector>
 
 CBFile::CBFile() {}
@@ -23,14 +20,15 @@ void CBFile::extract(const QString &fileName, const QString &extention) {
         throw(std::runtime_error("unknown file type " + extention.toStdString()));
 
     emit totalPages(archiveInfo->filesCount());
-    qDebug() << "emit total pages" << archiveInfo->filesCount();
 
+    int pageIdx = 0;
+    // cannot execute in parallel: extractor is not thread-safe.
     for (auto &item : archiveInfo->items()) {
         if (!item.isDir()) {
             auto *out_buffer = new std::vector<unsigned char>;
             extractor->extract(wFileName, *out_buffer, item.index());
-            emit extractPage(out_buffer);
-            qDebug() << "emit extractPage" << out_buffer;
+            emit extractPage(out_buffer, pageIdx);
+            ++pageIdx;
         }
     }
 }

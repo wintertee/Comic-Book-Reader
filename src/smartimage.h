@@ -4,6 +4,9 @@
 #include "Magick++.h"
 #include <QPixmap>
 
+/// For each instance, call loadpage() first to read original image data.
+/// Then call either setScaleFactor() or fitToWindow() to generate scaled image and pixmap
+/// Finally call getPixmap() to get final image in QPixmap format.
 class SmartImage {
   public:
     SmartImage();
@@ -12,33 +15,35 @@ class SmartImage {
     /// set scaleFactor and generate pixmap
     void setScaleFactor(double scaleFactor);
     /// calculate scaleFactor to fit to window size
-    double fitToWindow(int win_w, int win_h);
+    void fitToWindow(int win_w, int win_h);
+    double getScaleFactor() const;
     void setFilter(Magick::FilterType filter);
-    const QPixmap &getPixmap();
-    bool empty(){return emptyIm;}
+    const QPixmap &getPixmap() const;
+    bool empty() const;
 
   private:
-    /// load pixmap from blob
-    void loadPixmap(Magick::Blob &blob);
+    /// generate pixmap from blob
+    void genPixmap(Magick::Blob &blob);
     /// scale blob to scaledBlod by scaleFactor
     void scaleImage();
     /// read blob geometry
-    void readGeo();
+    //    void readGeo();
 
     // data
     Magick::Blob blob, scaled_blob;
+    Magick::Image image;
     QPixmap pixmap;
     /// pixmap is dirty
-    bool dirtyPixmap = false;
+    bool dirtyPixmap = true;
+    bool dirtyImage = true;
+
+    bool isNowFittedToWindow = false;
+    int win_w = 0, win_h = 0;
 
     // param
-    double scaleFactor = 0;
-    Magick::FilterType filter;
+    double scaleFactor = 1.0;
     int im_w = 0, im_h = 0;
-    /// image geometry is dirty
-    bool dirtyImW = false;
     /// image is empty
-    bool emptyIm = true;
 };
 
 #endif // SMARTIMAGE_H

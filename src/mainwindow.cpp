@@ -30,10 +30,8 @@
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 
-    img.setFilter(filter);
-    img2.setFilter(filter);
-
-    comicBook = new ComicBook("");
+    connect(&cbfile, &CBFile::extractPage, &comicBook, &ComicBook::setPage, Qt::QueuedConnection);
+    connect(&cbfile, &CBFile::totalPages, &comicBook, &ComicBook::setSize, Qt::QueuedConnection);
 
     // menu bar
     createActions();
@@ -56,7 +54,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     setCentralWidget(scrollArea);
 
     resize(QGuiApplication::primaryScreen()->availableSize() * 3 / 5);
-    showMaximized();
+    showNormal();
 }
 
 MainWindow::~MainWindow() {
@@ -75,21 +73,18 @@ void MainWindow::open() {
     if (fileName.isEmpty() || fileName.isNull())
         return;
 
-    if (comicBook != nullptr) {
-        delete comicBook;
-    }
-
     QFileInfo fileInfo(fileName);
     QString extention = fileInfo.suffix();
-    comicBook = new ComicBook(fileInfo.baseName());
+
+    comicBook.reset();
+
+    // comicBook.setTargetWindowSize(scrollArea->width() / (doublePageFlag ? 2 : 1), scrollArea->height());
+
+    comicBook.setName(fileInfo.baseName());
 
     // extract file to comicbook
 
-    QtConcurrent::run([&] {
-        connect(&cbfile, &CBFile::extractPage, comicBook, &ComicBook::appendPage, Qt::QueuedConnection);
-        connect(&cbfile, &CBFile::totalPages, comicBook, &ComicBook::setSize, Qt::QueuedConnection);
-        cbfile.extract(fileName, extention);
-    });
+    QtConcurrent::run([&] { cbfile.extract(fileName, extention); });
 
     // initialize
     clearLayout();
@@ -101,71 +96,70 @@ void MainWindow::open() {
     // load first image
     scrollArea->setVisible(true);
     currentPage = 0;
-    loadImage();
-    scaleImage(SCALE_TO_WINDOW);
+    scalePageAround(currentPage, SCALE_TO_WINDOW);
     showImage();
 }
 
 void MainWindow::organize() {
-    if (organizeAct->isChecked()) {
-        scrollArea->takeWidget();
-        scrollArea->setWidget(extractLabel);
-        extractLabel->setVisible(true);
-        setWindowTitle(QString("CBR - %1 Extracting...").arg(comicBook->getName()));
-        subComicBook.clear();
-        subComicBook.resize(comicBook->getSize(), false);
+    //    if (organizeAct->isChecked()) {
+    //        scrollArea->takeWidget();
+    //        scrollArea->setWidget(extractLabel);
+    //        extractLabel->setVisible(true);
+    //        setWindowTitle(QString("CBR - %1 Extracting...").arg(comicBook.getName()));
+    //        subComicBook.clear();
+    //        subComicBook.resize(comicBook.getSize(), false);
 
-        if (!organizeFlag) {
-            constexpr int labelWidth = 150;
-            constexpr int labelHeight = 200;
-            constexpr int spacing = 18;
-            int colNum = (scrollArea->width()) / (labelWidth + spacing);
-            colNum = colNum > 0 ? colNum : 1;
-            int lineNum = (int)comicBook->getSize() / colNum;
-            SmartImage im;
-            im.setFilter(filter);
-            int page = 0;
-            for (int i = 0; i < lineNum; ++i) {
-                qhLayoutVtr.push_back(new QHBoxLayout);
-                for (int j = 0; j < colNum; ++j, ++page) {
-                    im.loadpage(comicBook->getPage(page));
-                    im.fitToWindow(labelWidth, labelHeight * SMARTLABEL_PROP);
-                    qLabelVtr.push_back(new SmartLabel(extractLabel, im.getPixmap(), page, &subComicBook[page]));
-                    qLabelVtr[page]->resize(labelWidth, labelHeight);
-                    qhLayoutVtr[i]->addWidget(qLabelVtr[page]);
-                }
-                qhLayoutVtr[i]->setSpacing(spacing);
-                qvLayout->addLayout(qhLayoutVtr[i]);
-            }
-            if (comicBook->getSize() % colNum != 0) {
-                qhLayoutVtr.push_back(new QHBoxLayout);
-                for (int j = 0; j < colNum; ++j, ++page) {
-                    if (page < comicBook->getSize()) {
-                        im.loadpage(comicBook->getPage(page));
-                        im.fitToWindow(labelWidth, labelHeight * SMARTLABEL_PROP);
-                        qLabelVtr.push_back(new SmartLabel(extractLabel, im.getPixmap(), page, &subComicBook[page]));
-                        qLabelVtr[page]->resize(labelWidth, labelHeight);
-                        qhLayoutVtr[qhLayoutVtr.size() - 1]->addWidget(qLabelVtr[page]);
-                    } else {
-                        qLabelVtr.push_back(new SmartLabel(extractLabel));
-                        qLabelVtr[page]->resize(labelWidth, labelHeight);
-                        qhLayoutVtr[qhLayoutVtr.size() - 1]->addWidget(qLabelVtr[page]);
-                    }
-                }
-                qhLayoutVtr[qhLayoutVtr.size() - 1]->setSpacing(spacing);
-                qvLayout->addLayout(qhLayoutVtr[qhLayoutVtr.size() - 1]);
-            }
-            extractLabel->resize((labelWidth + spacing) * colNum, (lineNum + (comicBook->getSize() % colNum != 0)) * (labelHeight + 12));
-            extractLabel->setLayout(qvLayout);
-            organizeFlag = true;
-        }
-    } else {
-        scrollArea->takeWidget();
-        scrollArea->setWidget(imageLabel);
+    //        if (!organizeFlag) {
+    //            constexpr int labelWidth = 150;
+    //            constexpr int labelHeight = 200;
+    //            constexpr int spacing = 18;
+    //            int colNum = (scrollArea->width()) / (labelWidth + spacing);
+    //            colNum = colNum > 0 ? colNum : 1;
+    //            int lineNum = (int)comicBook.getSize() / colNum;
+    //            SmartImage im;
+    //            im.setFilter(filter);
+    //            int page = 0;
+    //            for (int i = 0; i < lineNum; ++i) {
+    //                qhLayoutVtr.push_back(new QHBoxLayout);
+    //                for (int j = 0; j < colNum; ++j, ++page) {
+    //                    im.loadpage(comicBook.getPage(page));
+    //                    im.fitToWindow(labelWidth, labelHeight * SMARTLABEL_PROP);
+    //                    qLabelVtr.push_back(new SmartLabel(extractLabel, im.getPixmap(), page, &subComicBook[page]));
+    //                    qLabelVtr[page]->resize(labelWidth, labelHeight);
+    //                    qhLayoutVtr[i]->addWidget(qLabelVtr[page]);
+    //                }
+    //                qhLayoutVtr[i]->setSpacing(spacing);
+    //                qvLayout->addLayout(qhLayoutVtr[i]);
+    //            }
+    //            if (comicBook.getSize() % colNum != 0) {
+    //                qhLayoutVtr.push_back(new QHBoxLayout);
+    //                for (int j = 0; j < colNum; ++j, ++page) {
+    //                    if (page < comicBook.getSize()) {
+    //                        im.loadpage(comicBook.getPage(page));
+    //                        im.fitToWindow(labelWidth, labelHeight * SMARTLABEL_PROP);
+    //                        qLabelVtr.push_back(new SmartLabel(extractLabel, im.getPixmap(), page, &subComicBook[page]));
+    //                        qLabelVtr[page]->resize(labelWidth, labelHeight);
+    //                        qhLayoutVtr[qhLayoutVtr.size() - 1]->addWidget(qLabelVtr[page]);
+    //                    } else {
+    //                        qLabelVtr.push_back(new SmartLabel(extractLabel));
+    //                        qLabelVtr[page]->resize(labelWidth, labelHeight);
+    //                        qhLayoutVtr[qhLayoutVtr.size() - 1]->addWidget(qLabelVtr[page]);
+    //                    }
+    //                }
+    //                qhLayoutVtr[qhLayoutVtr.size() - 1]->setSpacing(spacing);
+    //                qvLayout->addLayout(qhLayoutVtr[qhLayoutVtr.size() - 1]);
+    //            }
+    //            extractLabel->resize((labelWidth + spacing) * colNum, (lineNum + (comicBook.getSize() % colNum != 0)) * (labelHeight + 12));
+    //            extractLabel->setLayout(qvLayout);
+    //            organizeFlag = true;
+    //        }
+    //    } else {
+    //        scrollArea->takeWidget();
+    //        scrollArea->setWidget(imageLabel);
 
-        updateTitle();
-    }
-    updateActions();
+    //        updateTitle();
+    //    }
+    //    updateActions();
 }
 
 void MainWindow::clearLayout() {
@@ -182,61 +176,45 @@ void MainWindow::clearLayout() {
 
 void MainWindow::selectAll() {
 
-    for (int i = 0; i < comicBook->getSize(); ++i) {
+    for (int i = 0; i < comicBook.getSize(); ++i) {
         qLabelVtr[i]->setChosen(selectAllAct->isChecked());
     }
 }
 
 void MainWindow::extract() {}
 
-void MainWindow::loadImage() {
-    img.loadpage(comicBook->getPage(currentPage));
-    if (doublePageFlag && (currentPage < (unsigned int)comicBook->getSize() - 1)) {
-        img2.loadpage(comicBook->getPage(currentPage + 1));
-    }
-}
-
-void MainWindow::scaleImage(double factor) {
+void MainWindow::scalePageAround(unsigned int pageIdx, double factor) {
 
     if (factor == SCALE_TO_WINDOW) {
-        if (doublePageFlag && !img2.empty()) {
-            scaleFactor = img.fitToWindow(scrollArea->width() / 2, scrollArea->height());
-            scaleFactor2 = img2.fitToWindow(scrollArea->width() / 2, scrollArea->height());
-        } else {
-            scaleFactor = img.fitToWindow(scrollArea->width(), scrollArea->height());
-        }
-
+        comicBook.scalePageAround(pageIdx, MAINWINDOW_GET_SCROLLAREA_GEO);
+        scaleFactor = comicBook.getPage(pageIdx)->getScaleFactor();
     } else {
         scaleFactor *= factor;
-        img.setScaleFactor(scaleFactor);
-        if (doublePageFlag && !img2.empty()) {
-            scaleFactor2 *= factor;
-            img2.setScaleFactor(scaleFactor2);
-        }
+        comicBook.scalePageAround(pageIdx, scaleFactor);
     }
 
     adjustScrollBar(scrollArea->horizontalScrollBar(), factor);
     adjustScrollBar(scrollArea->verticalScrollBar(), factor);
 
-    zoomInAct->setEnabled(scaleFactor < 5.0 && scaleFactor2 < 5.0);
-    zoomOutAct->setEnabled(scaleFactor > 0.2 && scaleFactor2 > 0.2);
+    zoomInAct->setEnabled(scaleFactor < 5.0);
+    zoomOutAct->setEnabled(scaleFactor > 0.2);
 }
 
 void MainWindow::showImage() {
-    imageLabel1->setPixmap(img.getPixmap());
+    imageLabel1->setPixmap(comicBook.getPage(currentPage)->getPixmap());
     imageLabel1->adjustSize();
-    if (doublePageFlag && (currentPage < (unsigned int)comicBook->getSize() - 1)) { // normal case for double page
-        imageLabel2->setPixmap(img2.getPixmap());
+    if (doublePageFlag && (currentPage < (unsigned int)comicBook.getSize() - 1)) { // normal case for double page
+        imageLabel2->setPixmap(comicBook.getPage(currentPage + 1)->getPixmap());
         imageLabel2->adjustSize();
         imageLabel->resize(imageLabel1->width() + imageLabel2->width() + 6, imageLabel1->height());
         imageLabel1->setGeometry(0, 0, imageLabel1->width(), imageLabel1->height());
         imageLabel2->setGeometry(imageLabel1->width() + 6, 0, imageLabel2->width(), imageLabel2->height());
-    } else if (doublePageFlag && !img2.empty()) { // show the last page with odd number
-        imageLabel2->setPixmap(img2.getPixmap());
-        imageLabel2->adjustSize();
-        imageLabel->resize(imageLabel1->width() + imageLabel2->width() + 6, imageLabel1->height());
-        imageLabel1->setGeometry(0, 0, imageLabel1->width(), imageLabel1->height());
-        imageLabel2->setGeometry(imageLabel1->width() + 6, 0, 0, 0);
+        //    } else if (doublePageFlag && !img2.empty()) { // show the last page with odd number
+        //        imageLabel2->setPixmap(img2.getPixmap());
+        //        imageLabel2->adjustSize();
+        //        imageLabel->resize(imageLabel1->width() + imageLabel2->width() + 6, imageLabel1->height());
+        //        imageLabel1->setGeometry(0, 0, imageLabel1->width(), imageLabel1->height());
+        //        imageLabel2->setGeometry(imageLabel1->width() + 6, 0, 0, 0);
     } else if (doublePageFlag) { // the file has only one page
         imageLabel->resize(imageLabel1->width() + imageLabel1->width() + 6, imageLabel1->height());
         imageLabel1->setGeometry(0, 0, imageLabel1->width(), imageLabel1->height());
@@ -244,23 +222,12 @@ void MainWindow::showImage() {
     } else {
         imageLabel->resize(imageLabel1->width(), imageLabel1->height());
     }
-
     updateActions();
     updateTitle();
 }
 
-void MainWindow::nextPage() {
-    if (doublePageFlag)
-        changePage(currentPage + 2);
-    else
-        changePage(currentPage + 1);
-}
-void MainWindow::lastPage() {
-    if (doublePageFlag)
-        changePage(currentPage - 2);
-    else
-        changePage(currentPage - 1);
-}
+void MainWindow::nextPage() { changePage(currentPage + (doublePageFlag ? 2 : 1)); }
+void MainWindow::lastPage() { changePage(currentPage - (doublePageFlag ? 2 : 1)); }
 
 void MainWindow::mousePressEvent(QMouseEvent *event) {
     auto x = event->position().x();
@@ -276,38 +243,32 @@ void MainWindow::mousePressEvent(QMouseEvent *event) {
 void MainWindow::changePage(int toPage) {
     if (toPage < 0)
         return;
-    if (toPage >= (int)comicBook->getSize())
+    if (toPage >= (int)comicBook.getSize())
         return;
     currentPage = toPage;
-    loadImage();
-    scaleImage(SCALE_TO_WINDOW);
+    scalePageAround(currentPage, 1.0);
     showImage();
 }
 
 void MainWindow::zoomIn() {
-    scaleImage(1.25);
+    scalePageAround(currentPage, 1.25);
     showImage();
 }
 
 void MainWindow::zoomOut() {
-    scaleImage(0.8);
+    scalePageAround(currentPage, 0.8);
     showImage();
 }
 
 void MainWindow::normalSize() {
     scaleFactor = 1.0;
-    img.setScaleFactor(scaleFactor);
-    if (doublePageFlag) {
-        scaleFactor2 = 1.0;
-        img2.setScaleFactor(scaleFactor2);
-    }
+    comicBook.scalePageAround(currentPage, scaleFactor);
     showImage();
 }
 
 void MainWindow::setFilter(Magick::FilterType newFilter) {
     filter = newFilter;
-    img.setFilter(filter);
-    img2.setFilter(filter);
+    comicBook.setFilter(filter);
 }
 
 void MainWindow::about() { QMessageBox::about(this, tr("About CBR"), tr("CBR is Comic Book Reader")); }
@@ -396,7 +357,7 @@ void MainWindow::createActions() {
 }
 
 void MainWindow::updateActions() {
-    bool empty = comicBook->empty();
+    bool empty = comicBook.empty();
     if (organizeAct->isChecked()) {
         zoomInAct->setEnabled(false);
         zoomOutAct->setEnabled(false);
@@ -415,7 +376,7 @@ void MainWindow::updateActions() {
         zoomInAct->setEnabled(!empty);
         zoomOutAct->setEnabled(!empty);
         normalSizeAct->setEnabled(!empty);
-        nextPageAct->setEnabled(!empty && currentPage != comicBook->getSize() - 1);
+        nextPageAct->setEnabled(!empty && currentPage != comicBook.getSize() - 1);
         lastPageAct->setEnabled(!empty && currentPage != 0);
     }
 }
@@ -423,7 +384,7 @@ void MainWindow::updateActions() {
 void MainWindow::updateTitle() {
     setWindowTitle(
         QString("CBR - %1 (%2/%3)    %4 %")
-            .arg(comicBook->getName(), QString::number(currentPage + 1), QString::number(comicBook->getSize()), QString::number(scaleFactor * 100, 'f', 2)));
+            .arg(comicBook.getName(), QString::number(currentPage + 1), QString::number(comicBook.getSize()), QString::number(scaleFactor * 100, 'f', 2)));
 }
 
 void MainWindow::adjustScrollBar(QScrollBar *scrollBar, double factor) {
@@ -440,14 +401,13 @@ void MainWindow::fullScreen() {
 
 void MainWindow::doublePage() {
     doublePageFlag = !doublePageFlag;
-    if (!comicBook->empty()) {
+    if (!comicBook.empty()) {
         if (doublePageFlag) {
             currentPage = (int)(currentPage / 2) * 2;
         } else {
             imageLabel2->setGeometry(imageLabel1->width() + 6, 0, 0, 0);
         }
-        loadImage();
-        scaleImage(SCALE_TO_WINDOW);
+        scalePageAround(currentPage, SCALE_TO_WINDOW);
         showImage();
     }
 }
