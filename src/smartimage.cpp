@@ -1,7 +1,7 @@
 #include "smartimage.h"
 #include <QDebug>
 
-SmartImage::SmartImage() { setFilter(Magick::LanczosFilter); }
+SmartImage::SmartImage() { setFilter(filter); }
 
 void SmartImage::loadpage(const std::vector<unsigned char> *page) {
     blob.update(const_cast<void *>(reinterpret_cast<const void *>(page->data())), page->size());
@@ -42,7 +42,13 @@ void SmartImage::fitToWindow(int win_w, int win_h) {
 
 double SmartImage::getScaleFactor() const { return scaleFactor; }
 
-void SmartImage::setFilter(Magick::FilterType filter) { image.filterType(filter); }
+void SmartImage::setFilter(Magick::FilterType filter) {
+    if (this->filter != filter) {
+        dirtyPixmap = true; // should use new filter to re-generate new pixmap
+        this->filter = filter;
+    }
+    image.filterType(filter);
+}
 
 const QPixmap &SmartImage::getPixmap() const { return pixmap; }
 

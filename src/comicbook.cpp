@@ -18,7 +18,6 @@ void ComicBook::setPage(std::vector<unsigned char> *page, int pageIdx) {
             delete pages[pageIdx];
         }
         pages[pageIdx] = new SmartImage();
-        pages[pageIdx]->setFilter(filter);
         pages[pageIdx]->loadpage(page);
         pages[pageIdx]->setScaleFactor(0.5);
         delete page;
@@ -80,7 +79,6 @@ void ComicBook::scalePage(unsigned int pageIdx, double scaleFactor) { pages[page
 void ComicBook::scalePage(unsigned int pageIdx, int win_w, int win_h) { pages[pageIdx]->fitToWindow(win_w, win_h); }
 
 void ComicBook::setFilter(const Magick::FilterType &filter) {
-    this->filter = filter;
     for (unsigned int pageIdx = 0; pageIdx < getSize(); ++pageIdx) {
         waitUntilPageAvailable(pageIdx);
         qFutures[pageIdx].then([&] { pages[pageIdx]->setFilter(filter); });

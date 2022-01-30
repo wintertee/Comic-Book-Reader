@@ -17,11 +17,16 @@ class CBFile : public QObject {
   public:
     CBFile();
     ~CBFile();
+
+    /// First send totalPages signal, then extract comicbook by sending extractPage signal page by page.
     void extract(const QString &fileName, const QString &extention);
 
   signals:
-    // need slot free page pointer
+
+    /// send page and its index after extracted. The slot function should the free page pointer.
     void extractPage(std::vector<unsigned char> *page, int pageIdx);
+
+    /// send totalpages of a file.
     void totalPages(unsigned int);
 
   private:
