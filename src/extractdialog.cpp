@@ -1,5 +1,4 @@
 #include "extractdialog.h"
-#include <QDebug>
 #include <QGuiApplication>
 #include <QMessageBox>
 #include <QPushButton>

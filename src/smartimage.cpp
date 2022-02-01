@@ -1,5 +1,4 @@
 #include "smartimage.h"
-#include <QDebug>
 #include <QDir>
 #include <QFile>
 

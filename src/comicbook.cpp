@@ -1,6 +1,5 @@
 #include "comicbook.h"
 #include <QCoreApplication>
-#include <QDebug>
 #include <QtConcurrent>
 
 ComicBook::ComicBook() { reset(); }
