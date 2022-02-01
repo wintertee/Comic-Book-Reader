@@ -33,7 +33,7 @@ find_library(Magick++ CORE_RL_Magick++_.lib HINTS 3rdparty/ImageMagick/lib)
 find_library(MagickCore CORE_RL_MagickCore_.lib HINTS 3rdparty/ImageMagick/lib)
 find_library(MagickWand CORE_RL_MagickWand_.lib HINTS 3rdparty/ImageMagick/lib)
 
-qt_add_executable(CBR WIN32 MANUAL_FINALIZATION ${PROJECT_SOURCES} )
+qt_add_executable(CBR WIN32 MANUAL_FINALIZATION ${PROJECT_SOURCES} resources/CBR.rc )
 target_link_libraries(CBR PRIVATE optimized Qt6::Widgets Qt6::Concurrent ${BIT7Z} ${Magick++} ${MagickCore} ${MagickWand})
 
 configure_file(3rdparty/7zip/7z.dll 7z.dll COPYONLY)
