@@ -26,7 +26,7 @@ class ComicBook : public QObject {
 
     void reset();
 
-    const SmartImage *getPage(unsigned int) const;
+    SmartImage *getPage(unsigned int) const;
 
     unsigned int getSize() const;
 
@@ -41,11 +41,11 @@ class ComicBook : public QObject {
 
     void setName(const QString &name);
 
-    const static unsigned int cacheScaleRange = 3;
+    void setCacheScaleRange(unsigned int cacheScaleRange);
 
   public slots:
     void setSize(unsigned int size);
-    void setPage(std::vector<unsigned char> *page, int pageIdx);
+    void setPage(std::vector<unsigned char> *page, int pageIdx, QString pageName);
 
   private:
     void waitUntilPageAvailable(unsigned int PageIdx) const;
@@ -63,6 +63,8 @@ class ComicBook : public QObject {
     QString name;
 
     unsigned int size;
+
+    unsigned int cacheScaleRange = 3;
 };
 
 #endif // COMICBOOK_H

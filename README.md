@@ -12,6 +12,7 @@ Update: `git submodule update --init --recursive`
 
 ### TODO
 
-- [ ] fix organize layout 
+- [x] fix organize layout 
 - [ ] add fit-to-window option
-- [ ] add export feature
+- [ ] async organize layout gen
+- [x] add export feature

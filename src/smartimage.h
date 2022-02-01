@@ -3,6 +3,7 @@
 
 #include "Magick++.h"
 #include <QPixmap>
+#include <QString>
 
 /// For each instance, call loadpage() first to read original image data.
 /// Then call either setScaleFactor() or fitToWindow() to generate scaled image and pixmap
@@ -12,7 +13,7 @@ class SmartImage {
     SmartImage();
 
     /// load page to blob
-    void loadpage(const std::vector<unsigned char> *page);
+    void loadpage(const std::vector<unsigned char> *page, QString name);
 
     /// set scaleFactor and generate pixmap
     void setScaleFactor(double scaleFactor);
@@ -26,7 +27,7 @@ class SmartImage {
 
     const QPixmap &getPixmap() const;
 
-    bool empty() const;
+    void save(QString &relativePath);
 
   private:
     /// generate pixmap from blob
@@ -40,6 +41,7 @@ class SmartImage {
     Magick::Blob blob, scaled_blob;
     Magick::Image image;
     QPixmap pixmap;
+    QString name;
 
     // param
 

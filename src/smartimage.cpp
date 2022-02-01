@@ -1,10 +1,13 @@
 #include "smartimage.h"
 #include <QDebug>
+#include <QDir>
+#include <QFile>
 
 SmartImage::SmartImage() { setFilter(filter); }
 
-void SmartImage::loadpage(const std::vector<unsigned char> *page) {
+void SmartImage::loadpage(const std::vector<unsigned char> *page, QString name) {
     blob.update(const_cast<void *>(reinterpret_cast<const void *>(page->data())), page->size());
+    this->name = name;
     image.read(blob);
     im_w = static_cast<int>(image.columns());
     im_h = static_cast<int>(image.rows());
@@ -65,11 +68,9 @@ void SmartImage::scaleImage() {
     image.write(&scaled_blob);
 }
 
-// void SmartImage::readGeo() {
-//    Magick::Image image;
-//    image.read(blob);
-//    im_w = static_cast<int>(image.columns());
-//    im_h = static_cast<int>(image.rows());
-//}
-
-// bool SmartImage::empty() const { return emptyIm; }
+void SmartImage::save(QString &relativePath) {
+    QFile imageFile(relativePath + "/" + name);
+    imageFile.open(QIODevice::WriteOnly);
+    imageFile.write(reinterpret_cast<const char *>(blob.data()), blob.length());
+    imageFile.close();
+}

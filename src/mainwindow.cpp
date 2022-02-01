@@ -78,11 +78,9 @@ void MainWindow::open() {
 
     comicBook.reset();
 
-    // comicBook.setTargetWindowSize(scrollArea->width() / (doublePageFlag ? 2 : 1), scrollArea->height());
-
     comicBook.setName(fileInfo.baseName());
 
-    // extract file to comicbook
+    // extract file to comicBook
 
     QtConcurrent::run([&] { cbfile.extract(fileName, extention); });
 
@@ -180,7 +178,30 @@ void MainWindow::selectAll() {
     }
 }
 
-void MainWindow::extract() {}
+void MainWindow::extract() {
+
+    QString tempDirName("temp");
+    QDir tempDir(tempDirName);
+    if (!tempDir.exists())
+        tempDir.mkpath(".");
+
+    QString archiveName =
+        QFileDialog::getSaveFileName(this, "Save File", tempDir.currentPath() + "/" + comicBook.getName() + ".cbz", "Comic book files (*.cbz)");
+
+    QFile archiveFile(archiveName);
+    if (archiveFile.exists())
+        archiveFile.remove();
+
+    for (unsigned int i = 0; i < subComicBook.size(); ++i) {
+        if (subComicBook[i] == 1) {
+            comicBook.getPage(i)->save(tempDirName);
+        }
+    }
+
+    cbfile.compress(tempDir.absolutePath(), archiveName);
+
+    tempDir.removeRecursively();
+}
 
 void MainWindow::scalePageAround(unsigned int pageIdx, double factor) {
 

@@ -12,13 +12,13 @@ void ComicBook::waitUntilPageAvailable(unsigned int pageIdx) const {
     }
 }
 
-void ComicBook::setPage(std::vector<unsigned char> *page, int pageIdx) {
-    qFutures[pageIdx] = QtConcurrent::run([this, page, pageIdx] {
+void ComicBook::setPage(std::vector<unsigned char> *page, int pageIdx, QString pageName) {
+    qFutures[pageIdx] = QtConcurrent::run([this, page, pageIdx, pageName] {
         if (pages[pageIdx] != nullptr) {
             delete pages[pageIdx];
         }
         pages[pageIdx] = new SmartImage();
-        pages[pageIdx]->loadpage(page);
+        pages[pageIdx]->loadpage(page, pageName);
         pages[pageIdx]->setScaleFactor(0.5);
         delete page;
     });
@@ -33,6 +33,8 @@ void ComicBook::setSize(unsigned int size) {
 
 void ComicBook::setName(const QString &name) { this->name = name; }
 
+void ComicBook::setCacheScaleRange(unsigned int cacheScaleRange) { this->cacheScaleRange = cacheScaleRange; }
+
 void ComicBook::reset() {
     setName("");
     for (auto &page : pages) {
@@ -43,7 +45,7 @@ void ComicBook::reset() {
     setSize(0);
 }
 
-const SmartImage *ComicBook::getPage(unsigned int index) const {
+SmartImage *ComicBook::getPage(unsigned int index) const {
     waitUntilPageAvailable(index);
     return pages[index];
 }

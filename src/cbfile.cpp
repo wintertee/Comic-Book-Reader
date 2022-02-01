@@ -1,4 +1,5 @@
 #include "cbfile.h"
+#include <QString>
 #include <vector>
 
 CBFile::CBFile() {}
@@ -27,8 +28,10 @@ void CBFile::extract(const QString &fileName, const QString &extention) {
         if (!item.isDir()) {
             auto *out_buffer = new std::vector<unsigned char>;
             extractor->extract(wFileName, *out_buffer, item.index());
-            emit extractPage(out_buffer, pageIdx);
+            emit extractPage(out_buffer, pageIdx, QString::fromWCharArray(item.name().c_str()));
             ++pageIdx;
         }
     }
 }
+
+void CBFile::compress(const QString &inDir, const QString &outArchive) { zipCompressor.compressFiles(inDir.toStdWString(), outArchive.toStdWString()); }
