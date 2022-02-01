@@ -21,6 +21,7 @@ set(PROJECT_SOURCES
         src/cbfile.h src/cbfile.cpp
         src/smartimage.h src/smartimage.cpp
         src/smartlabel.h src/smartlabel.cpp
+        src/extractdialog.h src/extractdialog.cpp
 )
 
 set(PROJECT_HEAD)
@@ -47,8 +48,6 @@ else()
         )
     endif()
 endif()
-
-add_subdirectory(external/bit7z)
 
 include_directories(external/bit7z/include)
 include_directories(external/ImageMagick/include)
