@@ -33,8 +33,6 @@ void ComicBook::setSize(unsigned int size) {
 
 void ComicBook::setName(const QString &name) { this->name = name; }
 
-void ComicBook::setCacheScaleRange(unsigned int cacheScaleRange) { this->cacheScaleRange = cacheScaleRange; }
-
 void ComicBook::reset() {
     setName("");
     for (auto &page : pages) {
@@ -50,29 +48,51 @@ SmartImage *ComicBook::getPage(unsigned int index) const {
     return pages[index];
 }
 
-void ComicBook::scalePageAround(unsigned int pageIdx, double scaleFactor) {
-    waitUntilPageAvailable(pageIdx);
-    qFutures[pageIdx].then([&] { scalePage(pageIdx, scaleFactor); });
-    for (unsigned int i = std::max(pageIdx, cacheScaleRange) - cacheScaleRange; i < pageIdx; ++i) {
-        waitUntilPageAvailable(i);
-        qFutures[pageIdx].then([&] { scalePage(i, scaleFactor); });
-    }
-    for (unsigned int i = pageIdx + 1; i < std::min(pageIdx + cacheScaleRange, getSize()); ++i) {
-        waitUntilPageAvailable(i);
-        qFutures[pageIdx].then([&] { scalePage(i, scaleFactor); });
+void ComicBook::scalePageAround(unsigned int pageIdx, double scaleFactor, int range) {
+    if (range < 0) {
+        for (unsigned int i = 0; i < getSize(); ++i) {
+            waitUntilPageAvailable(i);
+            qFutures[pageIdx].then([&] { scalePage(i, scaleFactor); });
+        }
+    } else {
+        waitUntilPageAvailable(pageIdx);
+        qFutures[pageIdx].then([&] { scalePage(pageIdx, scaleFactor); });
+        if (range != 0) {
+            unsigned int startIdx = std::max(pageIdx, static_cast<unsigned int>(range)) - range;
+            for (unsigned int i = startIdx; i < pageIdx; ++i) {
+                waitUntilPageAvailable(i);
+                qFutures[pageIdx].then([&] { scalePage(i, scaleFactor); });
+            }
+            unsigned int endIdx = std::min(pageIdx + range, getSize());
+            for (unsigned int i = pageIdx + 1; i < endIdx; ++i) {
+                waitUntilPageAvailable(i);
+                qFutures[pageIdx].then([&] { scalePage(i, scaleFactor); });
+            }
+        }
     }
 }
 
-void ComicBook::scalePageAround(unsigned int pageIdx, int win_w, int win_h) {
-    waitUntilPageAvailable(pageIdx);
-    qFutures[pageIdx].then([&] { scalePage(pageIdx, win_w, win_h); });
-    for (unsigned int i = std::max(pageIdx, cacheScaleRange) - cacheScaleRange; i < pageIdx; ++i) {
-        waitUntilPageAvailable(i);
-        qFutures[pageIdx].then([&] { scalePage(i, win_w, win_h); });
-    }
-    for (unsigned int i = pageIdx + 1; i < std::min(pageIdx + cacheScaleRange, getSize()); ++i) {
-        waitUntilPageAvailable(i);
-        qFutures[pageIdx].then([&] { scalePage(i, win_w, win_h); });
+void ComicBook::scalePageAround(unsigned int pageIdx, int win_w, int win_h, int range) {
+    if (range < 0) {
+        for (unsigned int i = 0; i < getSize(); ++i) {
+            waitUntilPageAvailable(i);
+            qFutures[pageIdx].then([&] { scalePage(i, win_w, win_h); });
+        }
+    } else {
+        waitUntilPageAvailable(pageIdx);
+        qFutures[pageIdx].then([&] { scalePage(pageIdx, win_w, win_h); });
+        if (range != 0) {
+            unsigned int startIdx = range < 0 ? 0 : std::max(pageIdx, static_cast<unsigned int>(range)) - range;
+            for (unsigned int i = startIdx; i < pageIdx; ++i) {
+                waitUntilPageAvailable(i);
+                qFutures[pageIdx].then([&] { scalePage(i, win_w, win_h); });
+            }
+            unsigned int endIdx = range < 0 ? getSize() : std::min(pageIdx + range, getSize());
+            for (unsigned int i = pageIdx + 1; i < endIdx; ++i) {
+                waitUntilPageAvailable(i);
+                qFutures[pageIdx].then([&] { scalePage(i, win_w, win_h); });
+            }
+        }
     }
 }
 
@@ -88,7 +108,5 @@ void ComicBook::setFilter(const Magick::FilterType &filter) {
 }
 
 unsigned int ComicBook::getSize() const { return size; }
-
-bool ComicBook::empty() const { return pages.empty(); }
 
 const QString &ComicBook::getName() const { return name; };

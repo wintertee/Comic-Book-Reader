@@ -4,9 +4,14 @@
 // disable minwindef.h
 #define NOMINMAX
 
+#include <QAction>
+#include <QActionGroup>
 #include <QFileInfo>
 #include <QLayout>
 #include <QMainWindow>
+#include <QMenu>
+#include <QScrollArea>
+#include <QScrollBar>
 #include <vector>
 
 #include "Magick++.h"
@@ -15,15 +20,6 @@
 #include "comicbook.h"
 #include "smartimage.h"
 #include "smartlabel.h"
-
-QT_BEGIN_NAMESPACE
-class QAction;
-class QLabel;
-class QMenu;
-class QScrollArea;
-class QScrollBar;
-class QActionGroup;
-QT_END_NAMESPACE
 
 // windows_width, windows_height
 #define MAINWINDOW_GET_SCROLLAREA_GEO scrollArea->width() / (doublePageFlag ? 2 : 1), scrollArea->height()
@@ -42,8 +38,7 @@ class MainWindow : public QMainWindow {
     /// open a cbr or cbz file and extract to comicbook
     void open();
     void organize();
-    void selectAll();
-    void extract();
+    void extract(std::vector<int> chosenFlag);
 
     void nextPage();
     void lastPage();
@@ -70,24 +65,16 @@ class MainWindow : public QMainWindow {
 
     void adjustScrollBar(QScrollBar *scrollBar, double factor);
 
-    void clearLayout();
-
     CBFile cbfile;
 
     // widgets
     QLabel *imageLabel;
     QLabel *imageLabel1;
     QLabel *imageLabel2;
-    QLabel *extractLabel;
     QScrollArea *scrollArea;
 
     // data
     ComicBook comicBook;
-    std::vector<int> subComicBook;
-
-    std::vector<QHBoxLayout *> qhLayoutVtr;
-    QVBoxLayout *qvLayout;
-    std::vector<SmartLabel *> qLabelVtr;
 
     // parameters
 
@@ -100,17 +87,15 @@ class MainWindow : public QMainWindow {
 
     // menubar
     QMenu *fileMenu;
-    QMenu *extractMenu;
 
     QAction *organizeAct;
-    QAction *selectAllAct;
-    QAction *extractAct;
     QAction *nextPageAct;
     QAction *lastPageAct;
     QAction *zoomInAct;
     QAction *zoomOutAct;
     QAction *normalSizeAct;
     QAction *fullScreenAct;
+    QAction *fitToWindowAct;
     QAction *doublePageAct;
 
     QAction *gaussianFilterAct; // Zoom in for image

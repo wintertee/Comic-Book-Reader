@@ -10,11 +10,7 @@ int main(int argc, char *argv[]) {
     try {
         a.exec();
     } catch (const std::exception &e) {
-        QMessageBox msgBox;
-        msgBox.setText("An error occured.");
-        msgBox.setInformativeText(e.what());
-        msgBox.setStandardButtons(QMessageBox::Cancel);
-        msgBox.exec();
+        QMessageBox::critical(nullptr, "Error", e.what());
     }
     return 0;
 }

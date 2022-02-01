@@ -30,18 +30,15 @@ class ComicBook : public QObject {
 
     unsigned int getSize() const;
 
-    bool empty() const;
-
     const QString &getName() const;
 
     void setFilter(const Magick::FilterType &filter);
 
-    void scalePageAround(unsigned int pageIdx, double scaleFactor);
-    void scalePageAround(unsigned int pageIdx, int win_w, int win_h);
+    /// if range<0, scall all pages
+    void scalePageAround(unsigned int pageIdx, double scaleFactor, int range = 4);
+    void scalePageAround(unsigned int pageIdx, int win_w, int win_h, int range = 4);
 
     void setName(const QString &name);
-
-    void setCacheScaleRange(unsigned int cacheScaleRange);
 
   public slots:
     void setSize(unsigned int size);
@@ -63,8 +60,6 @@ class ComicBook : public QObject {
     QString name;
 
     unsigned int size;
-
-    unsigned int cacheScaleRange = 3;
 };
 
 #endif // COMICBOOK_H
