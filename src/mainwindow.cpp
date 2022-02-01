@@ -169,6 +169,7 @@ void MainWindow::nextPage() { changePage(currentPage + (doublePageFlag ? 2 : 1))
 void MainWindow::lastPage() { changePage(currentPage - (doublePageFlag ? 2 : 1)); }
 
 void MainWindow::mousePressEvent(QMouseEvent *event) {
+    QMainWindow::mousePressEvent(event);
     auto x = event->position().x();
     auto y = event->position().y();
     if (!organizeAct->isChecked() && scrollArea->geometry().contains(x, y)) {
@@ -176,6 +177,13 @@ void MainWindow::mousePressEvent(QMouseEvent *event) {
             lastPage();
         else if (x > scrollArea->width() / 3 * 2)
             nextPage();
+    }
+}
+
+void MainWindow::resizeEvent(QResizeEvent *event) {
+    QMainWindow::resizeEvent(event);
+    if (fitToWindowAct->isChecked()) {
+        changePage(currentPage);
     }
 }
 

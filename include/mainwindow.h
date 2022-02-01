@@ -33,6 +33,7 @@ class MainWindow : public QMainWindow {
 
   protected:
     void mousePressEvent(QMouseEvent *event);
+    void resizeEvent(QResizeEvent *event);
 
   private slots:
     /// open a cbr or cbz file and extract to comicbook
