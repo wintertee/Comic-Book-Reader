@@ -5,7 +5,7 @@ marp: true
 # Projet IN204: Comic Book Reader
 
 
-###### Yuang ZHAO, Tiancheng Yang
+###### Yuang ZHAO, Tiancheng YANG
 
 ###### 14-02-2022
 
@@ -82,7 +82,8 @@ class SmartImage{
 Grâce à `QtConcurrent` de QT, une API multithread avancée, nous pouvons facilement implémenter la décompression asynchrone.
 
 ```c++
-QtConcurrent::run([&] { cbfile.extract(fileName, extention); }); //MainWindow::open()
+// MainWindow::open()
+QtConcurrent::run([&] { cbfile.extract(fileName, extention); });
 ```
 
 ---
@@ -149,3 +150,88 @@ void ComicBook::scalePageRange(unsigned int start, unsigned int end, double scal
     }
 }
 ```
+
+---
+
+# Encapsulation du Label
+
+```C++
+#define SMARTLABEL_PROP 5.0 / 6.0 // the proportion of image part
+class SmartLabel : public QLabel {
+    Q_OBJECT
+  public:
+    SmartLabel(QWidget *parent);
+    SmartLabel(QWidget *parent, QPixmap image, int num, int *chosenFlag);
+    ~SmartLabel();
+    void setChosen(bool flag);
+    void resize(int w, int h);
+  protected:
+    void mousePressEvent(QMouseEvent *event);
+  private:
+    QLabel *imageLabel;
+    QLabel *textLabel;
+    int *chosenFlag;
+    int num = -1;
+    bool empty = true;
+};
+```
+
+---
+
+# Double Page
+
+```C++
+void MainWindow::doublePage() {
+    doublePageFlag = !doublePageFlag;
+    if (comicBook.getSize() != 0) {
+        if (doublePageFlag) {
+            currentPage = (int)(currentPage / 2) * 2;
+        } else {
+            imageLabel2->setGeometry(imageLabel1->width() + 6, 0, 0, 0);
+        }
+        scalePageAround(currentPage, SCALE_TO_WINDOW);
+        showImage();
+    }
+}
+```
+
+---
+
+# Double Page
+
+``` C++
+void MainWindow::showImage() {
+    imageLabel1->setPixmap(comicBook.getPage(currentPage)->getPixmap());
+    imageLabel1->adjustSize();
+    if (doublePageFlag && (currentPage < (unsigned int)comicBook.getSize() - 1)) { // normal case for double page
+        imageLabel2->setPixmap(comicBook.getPage(currentPage + 1)->getPixmap());
+        imageLabel2->adjustSize();
+        imageLabel->resize(imageLabel1->width() + imageLabel2->width() + 6, imageLabel1->height());
+        imageLabel1->setGeometry(0, 0, imageLabel1->width(), imageLabel1->height());
+        imageLabel2->setGeometry(imageLabel1->width() + 6, 0, imageLabel2->width(), imageLabel2->height());
+    } else if (doublePageFlag) {
+        imageLabel->resize(imageLabel1->width() + imageLabel1->width() + 6, imageLabel1->height());
+        imageLabel1->setGeometry(0, 0, imageLabel1->width(), imageLabel1->height());
+        imageLabel2->setGeometry(imageLabel1->width() + 6, 0, 0, 0);
+    } else {
+        imageLabel->resize(imageLabel1->width(), imageLabel1->height());
+    }
+    updateActions();
+    updateTitle();
+}
+```
+
+---
+
+# Filtre
+
+- GaussianFilter : Zoom in for image
+- BoxFilter : Zoom in for text
+- SincFilter : Zoom out for text
+- LanczosFilter : Zoom out for image
+
+#### référence : https://legacy.imagemagick.org/Usage/filter/
+
+---
+
+# Merci
