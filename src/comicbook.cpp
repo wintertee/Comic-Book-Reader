@@ -18,7 +18,7 @@ void ComicBook::setPage(std::vector<unsigned char> *page, int pageIdx, QString p
         }
         pages[pageIdx] = new SmartImage();
         pages[pageIdx]->loadpage(page, pageName);
-        pages[pageIdx]->setScaleFactor(0.5);
+        pages[pageIdx]->setScaleFactor(1.0);
         delete page;
     });
 }
