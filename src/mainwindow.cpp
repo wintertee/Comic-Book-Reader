@@ -103,7 +103,10 @@ void MainWindow::extract(std::vector<int> chosenFlag) {
         tempDir.mkpath(".");
 
     QString archiveName =
-        QFileDialog::getSaveFileName(this, "Save File", tempDir.currentPath() + "/" + comicBook.getName() + ".cbz", "Comic book files (*.cbz)");
+        QFileDialog::getSaveFileName(this, "Export File", tempDir.currentPath() + "/" + comicBook.getName() + ".cbz", "Comic book files (*.cbz)");
+
+    if (archiveName.isEmpty() || archiveName.isNull())
+        return;
 
     QFile archiveFile(archiveName);
     if (archiveFile.exists())
@@ -226,7 +229,7 @@ void MainWindow::createActions() {
     QAction *openAct = fileMenu->addAction(tr("O&pen..."), this, &MainWindow::open);
     openAct->setShortcut(QKeySequence::Open);
 
-    organizeAct = fileMenu->addAction(tr("O&rganize"), this, &MainWindow::organize);
+    organizeAct = fileMenu->addAction(tr("Export"), this, &MainWindow::organize);
 
     fileMenu->addSeparator();
 
